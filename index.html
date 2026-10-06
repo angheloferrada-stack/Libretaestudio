@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B3135B">
+<title>Bailes del Conjunto</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F1F4F2;--ink:#17262B;--mute:#5B6B70;--line:#D3DBD8;--fuc:#B3135B;--tea:#0F6B6B;--saf:#F6B73C;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Source Sans 3",system-ui,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;margin:0;line-height:1.1}
+.weave{height:22px;background:repeating-linear-gradient(90deg,var(--fuc) 0 28px,var(--saf) 28px 40px,var(--tea) 40px 64px,var(--saf) 64px 76px);border-bottom:4px solid var(--ink)}
+header{padding:20px 16px 8px;max-width:720px;margin:auto}
+header h1{font-size:2.1rem;font-weight:800}
+header p{margin:6px 0 0;color:var(--mute)}
+.bar{display:flex;gap:8px;max-width:720px;margin:12px auto 0;padding:0 16px}
+input,select,textarea,button{font:inherit}
+input,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--saf);outline-offset:1px}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;font-weight:600;background:var(--ink);color:#fff}
+button.sec{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+button.fuc{background:var(--fuc)}
+button.del{background:transparent;color:var(--fuc);padding:6px 0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;max-width:720px;margin:auto;scrollbar-width:none}
+.chip{flex:none;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:99px;padding:6px 14px}
+.chip[aria-pressed=true]{background:var(--tea);border-color:var(--tea);color:#fff}
+main{max-width:720px;margin:auto;padding:0 16px 96px}
+.region{margin:22px 0 6px;font-size:1.15rem;color:var(--tea)}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-left:6px solid var(--fuc);border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.row b{font-family:"Bricolage Grotesque";font-size:1.1rem}
+.row small{display:block;color:var(--mute)}
+.row .go{margin-left:auto;font-size:1.4rem;color:var(--mute)}
+.empty{padding:36px 8px;text-align:center;color:var(--mute)}
+dialog{border:0;border-radius:14px;padding:0;width:min(560px,94vw);max-height:92vh;background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(23,38,43,.6)}
+.dlg{padding:16px 18px 20px}
+.dlg h2{font-size:1.7rem;margin:4px 0}
+.tag{color:var(--tea);font-weight:600}
+video{width:100%;border-radius:10px;background:#000;margin:12px 0;max-height:60vh}
+.sec-t{font-family:"Bricolage Grotesque";font-weight:700;margin:16px 0 4px}
+.lyr{white-space:pre-wrap;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:12px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+progress{width:100%;height:10px;accent-color:var(--fuc)}
+.msg{color:var(--fuc);min-height:1.4em;margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="weave"></div>
+<header>
+  <h1>Bailes del conjunto</h1>
+  <p>Mira cada baile, su significado y su letra.</p>
+</header>
+<div class="bar">
+  <input id="q" type="search" placeholder="Buscar baile, país o región" aria-label="Buscar">
+  <button id="btnAdmin" class="sec">Ingreso admin</button>
+</div>
+<div id="chips" class="chips"></div>
+<main id="list"></main>
+
+<dialog id="dView"><div class="dlg" id="viewBody"></div></dialog>
+
+<dialog id="dLogin"><form class="dlg" id="fLogin" method="dialog">
+  <h2>Entrar al equipo</h2>
+  <label for="em">Correo</label><input id="em" type="email" autocomplete="username" required>
+  <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
+  <div class="msg" id="loginMsg"></div>
+  <div class="acts"><button type="button" class="sec" data-close>Cancelar</button><button class="fuc">Entrar</button></div>
+</form></dialog>
+
+<dialog id="dAdd"><form class="dlg" id="fAdd" method="dialog">
+  <h2>Agregar baile</h2>
+  <label for="nombre">Nombre del baile</label><input id="nombre" required>
+  <label for="pais">País</label><input id="pais" list="paises" required><datalist id="paises"></datalist>
+  <label for="region">Región o zona</label><input id="region" list="regiones" placeholder="Ej: Zona central" required><datalist id="regiones"></datalist>
+  <label for="signif">Significado</label><textarea id="signif" rows="3"></textarea>
+  <label for="letra">Letra (opcional)</label><textarea id="letra" rows="4"></textarea>
+  <label for="video">Video de ensayo (máx. 150 MB)</label><input id="video" type="file" accept="video/*">
+  <progress id="prog" max="100" value="0" hidden></progress>
+  <div class="msg" id="addMsg"></div>
+  <div class="acts"><button type="button" class="sec" data-close>Cancelar</button><button class="fuc" id="btnSave">Guardar baile</button></div>
+</form></dialog>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getStorage,ref,uploadBytesResumable,getDownloadURL,deleteObject} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+
+// PEGA AQUÍ TU CONFIG DE FIREBASE
+const firebaseConfig={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
+
+const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app),st=getStorage(app);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let bailes=[],pais="",txt="",user=null;
+
+onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));render()},
+  e=>{$("list").innerHTML=`<div class="empty">No se pudo cargar el catálogo. Revisa la config de Firebase.</div>`});
+onAuthStateChanged(auth,u=>{user=u;$("btnAdmin").textContent=u?"Agregar baile":"Ingreso admin";render()});
+
+function render(){
+  const paises=[...new Set(bailes.map(b=>b.pais))].sort();
+  $("chips").innerHTML=`<button class="chip" aria-pressed="${!pais}" data-p="">Todos</button>`+paises.map(p=>`<button class="chip" aria-pressed="${pais===p}" data-p="${esc(p)}">${esc(p)}</button>`).join("");
+  $("paises").innerHTML=paises.map(p=>`<option value="${esc(p)}">`).join("");
+  $("regiones").innerHTML=[...new Set(bailes.map(b=>b.region))].sort().map(r=>`<option value="${esc(r)}">`).join("");
+  const t=txt.toLowerCase();
+  const f=bailes.filter(b=>(!pais||b.pais===pais)&&(!t||[b.nombre,b.pais,b.region].join(" ").toLowerCase().includes(t)));
+  if(!f.length){$("list").innerHTML=`<div class="empty">${bailes.length?"Ningún baile coincide con tu búsqueda.":"Aún no hay bailes. "+(user?"Agrega el primero con el botón de arriba.":"El equipo los irá subiendo.")}</div>`;return}
+  const g={};f.forEach(b=>{(g[b.pais+" · "+b.region]??=[]).push(b)});
+  $("list").innerHTML=Object.keys(g).sort().map(k=>`<h3 class="region">${esc(k)}</h3>`+g[k].map(b=>`<button class="row" data-id="${b.id}"><span><b>${esc(b.nombre)}</b><small>${b.videoUrl?"Con video":"Sin video aún"}</small></span><span class="go" aria-hidden="true">›</span></button>`).join("")).join("");
+}
+
+document.addEventListener("click",e=>{
+  const c=e.target.closest(".chip");if(c){pais=c.dataset.p;render();return}
+  const r=e.target.closest(".row");if(r){openView(r.dataset.id);return}
+  if(e.target.matches("[data-close]"))e.target.closest("dialog").close();
+});
+$("q").oninput=e=>{txt=e.target.value;render()};
+$("btnAdmin").onclick=()=>user?($("fAdd").reset(),$("addMsg").textContent="",$("dAdd").showModal()):$("dLogin").showModal();
+
+function openView(id){
+  const b=bailes.find(x=>x.id===id);if(!b)return;
+  $("viewBody").innerHTML=`<span class="tag">${esc(b.pais)} · ${esc(b.region)}</span><h2>${esc(b.nombre)}</h2>
+  ${b.videoUrl?`<video src="${esc(b.videoUrl)}" controls playsinline preload="metadata"></video>`:""}
+  ${b.significado?`<div class="sec-t">Significado</div><p>${esc(b.significado)}</p>`:""}
+  ${b.letra?`<div class="sec-t">Letra</div><div class="lyr">${esc(b.letra)}</div>`:""}
+  <div class="acts">${user?`<button class="del" id="btnDel">Eliminar baile</button>`:""}<button class="sec" data-close>Cerrar</button></div>`;
+  const d=$("dView");d.showModal();d.addEventListener("close",()=>d.querySelector("video")?.pause(),{once:true});
+  $("btnDel")?.addEventListener("click",async()=>{
+    if(!confirm(`¿Eliminar "${b.nombre}" y su video?`))return;
+    try{if(b.videoPath)await deleteObject(ref(st,b.videoPath)).catch(()=>{});await deleteDoc(doc(db,"bailes",b.id));d.close()}catch(err){alert("No se pudo eliminar: "+err.message)}
+  });
+}
+
+$("fLogin").onsubmit=async e=>{
+  e.preventDefault();$("loginMsg").textContent="";
+  try{await signInWithEmailAndPassword(auth,$("em").value,$("pw").value);$("dLogin").close();$("fLogin").reset()}
+  catch{$("loginMsg").textContent="Correo o contraseña incorrectos."}
+};
+
+$("fAdd").onsubmit=async e=>{
+  e.preventDefault();const msg=$("addMsg"),btn=$("btnSave");msg.textContent="";
+  const file=$("video").files[0];
+  if(file&&file.size>150*1024*1024){msg.textContent="El video pesa más de 150 MB. Comprímelo antes de subirlo.";return}
+  btn.disabled=true;
+  try{
+    let videoUrl="",videoPath="";
+    if(file){
+      videoPath=`videos/${Date.now()}-${file.name.replace(/[^\w.-]/g,"_")}`;
+      const task=uploadBytesResumable(ref(st,videoPath),file,{contentType:file.type});
+      $("prog").hidden=false;
+      await new Promise((ok,no)=>task.on("state_changed",s=>{$("prog").value=s.bytesTransferred/s.totalBytes*100},no,ok));
+      videoUrl=await getDownloadURL(task.snapshot.ref);
+    }
+    await addDoc(collection(db,"bailes"),{nombre:$("nombre").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),significado:$("signif").value.trim(),letra:$("letra").value.trim(),videoUrl,videoPath,creado:serverTimestamp()});
+    $("dAdd").close();
+  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  finally{btn.disabled=false;$("prog").hidden=true;$("prog").value=0}
+};
+
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
