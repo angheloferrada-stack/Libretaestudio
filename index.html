@@ -81,7 +81,7 @@ progress{width:100%;height:10px;accent-color:var(--fuc)}
   <label for="region">Región o zona</label><input id="region" list="regiones" placeholder="Ej: Zona central" required><datalist id="regiones"></datalist>
   <label for="signif">Significado</label><textarea id="signif" rows="3"></textarea>
   <label for="letra">Letra (opcional)</label><textarea id="letra" rows="4"></textarea>
-  <label for="video">Video de ensayo (máx. 150 MB)</label><input id="video" type="file" accept="video/*">
+  <label for="video">Video de ensayo (máx. 100 MB)</label><input id="video" type="file" accept="video/*">
   <progress id="prog" max="100" value="0" hidden></progress>
   <div class="msg" id="addMsg"></div>
   <div class="acts"><button type="button" class="sec" data-close>Cancelar</button><button class="fuc" id="btnSave">Guardar baile</button></div>
@@ -91,12 +91,12 @@ progress{width:100%;height:10px;accent-color:var(--fuc)}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {getStorage,ref,uploadBytesResumable,getDownloadURL,deleteObject} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
-// PEGA AQUÍ TU CONFIG DE FIREBASE
-const firebaseConfig={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
+const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
+// PEGA AQUÍ TUS DATOS DE CLOUDINARY
+const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app),st=getStorage(app);
+const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let bailes=[],pais="",txt="",user=null;
@@ -134,8 +134,8 @@ function openView(id){
   <div class="acts">${user?`<button class="del" id="btnDel">Eliminar baile</button>`:""}<button class="sec" data-close>Cerrar</button></div>`;
   const d=$("dView");d.showModal();d.addEventListener("close",()=>d.querySelector("video")?.pause(),{once:true});
   $("btnDel")?.addEventListener("click",async()=>{
-    if(!confirm(`¿Eliminar "${b.nombre}" y su video?`))return;
-    try{if(b.videoPath)await deleteObject(ref(st,b.videoPath)).catch(()=>{});await deleteDoc(doc(db,"bailes",b.id));d.close()}catch(err){alert("No se pudo eliminar: "+err.message)}
+    if(!confirm(`¿Eliminar "${b.nombre}" del catálogo?`))return;
+    try{await deleteDoc(doc(db,"bailes",b.id));d.close()}catch(err){alert("No se pudo eliminar: "+err.message)}
   });
 }
 
@@ -148,18 +148,25 @@ $("fLogin").onsubmit=async e=>{
 $("fAdd").onsubmit=async e=>{
   e.preventDefault();const msg=$("addMsg"),btn=$("btnSave");msg.textContent="";
   const file=$("video").files[0];
-  if(file&&file.size>150*1024*1024){msg.textContent="El video pesa más de 150 MB. Comprímelo antes de subirlo.";return}
+  if(file&&file.size>100*1024*1024){msg.textContent="El video pesa más de 100 MB. Comprímelo antes de subirlo.";return}
   btn.disabled=true;
   try{
-    let videoUrl="",videoPath="";
+    let videoUrl="",videoId="";
     if(file){
-      videoPath=`videos/${Date.now()}-${file.name.replace(/[^\w.-]/g,"_")}`;
-      const task=uploadBytesResumable(ref(st,videoPath),file,{contentType:file.type});
+      if(!CLOUD_NAME||!UPLOAD_PRESET)throw new Error("falta configurar Cloudinary");
       $("prog").hidden=false;
-      await new Promise((ok,no)=>task.on("state_changed",s=>{$("prog").value=s.bytesTransferred/s.totalBytes*100},no,ok));
-      videoUrl=await getDownloadURL(task.snapshot.ref);
+      const r=await new Promise((ok,no)=>{
+        const x=new XMLHttpRequest(),fd=new FormData();
+        fd.append("file",file);fd.append("upload_preset",UPLOAD_PRESET);
+        x.open("POST",`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+        x.upload.onprogress=ev=>{if(ev.lengthComputable)$("prog").value=ev.loaded/ev.total*100};
+        x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}x.status===200?ok(j):no(new Error(j.error?.message||"error de subida"))};
+        x.onerror=()=>no(new Error("sin conexión"));
+        x.send(fd);
+      });
+      videoUrl=r.secure_url;videoId=r.public_id;
     }
-    await addDoc(collection(db,"bailes"),{nombre:$("nombre").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),significado:$("signif").value.trim(),letra:$("letra").value.trim(),videoUrl,videoPath,creado:serverTimestamp()});
+    await addDoc(collection(db,"bailes"),{nombre:$("nombre").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),significado:$("signif").value.trim(),letra:$("letra").value.trim(),videoUrl,videoId,creado:serverTimestamp()});
     $("dAdd").close();
   }catch(err){msg.textContent="No se pudo guardar: "+err.message}
   finally{btn.disabled=false;$("prog").hidden=true;$("prog").value=0}
