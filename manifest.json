@@ -1,1 +1,15 @@
-{"name":"Bailes del Conjunto","short_name":"Bailes","start_url":"./","display":"standalone","background_color":"#F1F4F2","theme_color":"#B3135B","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "name": "Huilén · Bailes del conjunto",
+  "short_name": "Huilén",
+  "description": "Catálogo de bailes del conjunto folclórico Huilén",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F7F7",
+  "theme_color": "#F7F7F7",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
