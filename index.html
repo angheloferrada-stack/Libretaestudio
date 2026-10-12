@@ -3,175 +3,403 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#B3135B">
-<title>Bailes del Conjunto</title>
+<meta name="theme-color" content="#F7F7F7">
+<title>Huilén · Bailes del conjunto</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F1F4F2;--ink:#17262B;--mute:#5B6B70;--line:#D3DBD8;--fuc:#B3135B;--tea:#0F6B6B;--saf:#F6B73C;--card:#fff}
+:root{--bg:#F7F7F7;--ink:#14181C;--mute:#5F6B73;--line:#E2E5E7;--teal:#0E7C86;--mag:#C2308A;--pur:#7B3FBF;--blue:#1479B8;--grad:linear-gradient(90deg,#14B8A6,#22A6D9 45%,#B24FD1)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Source Sans 3",system-ui,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
-h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;margin:0;line-height:1.1}
-.weave{height:22px;background:repeating-linear-gradient(90deg,var(--fuc) 0 28px,var(--saf) 28px 40px,var(--tea) 40px 64px,var(--saf) 64px 76px);border-bottom:4px solid var(--ink)}
-header{padding:20px 16px 8px;max-width:720px;margin:auto}
-header h1{font-size:2.1rem;font-weight:800}
-header p{margin:6px 0 0;color:var(--mute)}
-.bar{display:flex;gap:8px;max-width:720px;margin:12px auto 0;padding:0 16px}
-input,select,textarea,button{font:inherit}
-input,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
-input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--saf);outline-offset:1px}
-button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;font-weight:600;background:var(--ink);color:#fff}
-button.sec{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
-button.fuc{background:var(--fuc)}
-button.del{background:transparent;color:var(--fuc);padding:6px 0}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;max-width:720px;margin:auto;scrollbar-width:none}
-.chip{flex:none;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:99px;padding:6px 14px}
-.chip[aria-pressed=true]{background:var(--tea);border-color:var(--tea);color:#fff}
-main{max-width:720px;margin:auto;padding:0 16px 96px}
-.region{margin:22px 0 6px;font-size:1.15rem;color:var(--tea)}
-.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-left:6px solid var(--fuc);border-radius:8px;padding:12px 14px;margin-bottom:8px}
-.row b{font-family:"Bricolage Grotesque";font-size:1.1rem}
-.row small{display:block;color:var(--mute)}
-.row .go{margin-left:auto;font-size:1.4rem;color:var(--mute)}
-.empty{padding:36px 8px;text-align:center;color:var(--mute)}
-dialog{border:0;border-radius:14px;padding:0;width:min(560px,94vw);max-height:92vh;background:var(--bg);color:var(--ink)}
-dialog::backdrop{background:rgba(23,38,43,.6)}
-.dlg{padding:16px 18px 20px}
-.dlg h2{font-size:1.7rem;margin:4px 0}
-.tag{color:var(--tea);font-weight:600}
-video{width:100%;border-radius:10px;background:#000;margin:12px 0;max-height:60vh}
-.sec-t{font-family:"Bricolage Grotesque";font-weight:700;margin:16px 0 4px}
-.lyr{white-space:pre-wrap;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:12px}
-label{display:block;font-weight:600;margin:12px 0 4px}
-.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-progress{width:100%;height:10px;accent-color:var(--fuc)}
-.msg{color:var(--fuc);min-height:1.4em;margin-top:8px}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "DM Sans",system-ui,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:700;line-height:1.1;margin:0;letter-spacing:-.01em}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit}
+:focus-visible{outline:3px solid #22A6D9;outline-offset:2px}
+.wrap{max-width:880px;margin:0 auto;padding:0 18px}
+
+/* Barra superior */
+.top{position:sticky;top:0;z-index:5;background:rgba(247,247,247,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-top:env(safe-area-inset-top)}
+.top .wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding-top:8px;padding-bottom:8px}
+.brand{margin-right:auto;display:block}
+.brand img{height:56px;width:auto;display:block;mix-blend-mode:multiply}
+.line{height:3px;background:var(--grad)}
+.pill{font:600 .74rem/1 "DM Sans",sans-serif;letter-spacing:.06em;padding:8px 11px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--mute);cursor:pointer}
+.btn{font:600 .9rem/1 "DM Sans",sans-serif;padding:12px 18px;border-radius:99px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn.small{padding:9px 14px;font-size:.82rem}
+.btn.pri{background:var(--ink);color:#fff}
+.btn.acc{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.danger{border-color:#B3261E;color:#B3261E}
+.btn:disabled{opacity:.5;cursor:wait}
+
+/* Inicio */
+.kick{font:600 .72rem/1 "DM Sans",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.hero{padding:26px 0 4px}
+.hero h1{font-size:2.4rem;margin-top:12px}
+.hero p{color:var(--mute);margin:8px 0 0}
+.search{position:relative;margin:18px 0 6px}
+.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--mute)}
+.search input{width:100%;padding:13px 16px 13px 46px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card{--c:var(--teal);display:flex;flex-direction:column;gap:12px;min-height:158px;padding:18px 16px 16px;background:#fff;border:1px solid var(--line);border-radius:20px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--c)}
+.card .ini{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font:700 1.35rem Fraunces,Georgia,serif;color:var(--c);background:color-mix(in srgb,var(--c) 13%,#fff)}
+.card h2{font-size:1.2rem;margin-top:auto;overflow-wrap:anywhere}
+.card small{color:var(--mute);font-size:.84rem}
+@media(hover:hover){.card:hover{transform:translateY(-2px);box-shadow:0 12px 26px -16px rgba(20,24,28,.4)}}
+
+/* Listas */
+.row{--c:var(--teal);display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--c);border-radius:14px;margin-bottom:9px}
+.row b{font:700 1.1rem/1.2 Fraunces,Georgia,serif;display:block}
+.row small{display:block;color:var(--mute);margin-top:3px;font-size:.85rem}
+.row .go{margin-left:auto;color:var(--mute);font-size:1.5rem}
+.back{display:inline-flex;gap:6px;align-items:center;margin:20px 0 4px;color:var(--mute);font-weight:600;font-size:.9rem}
+.lhead{--c:var(--teal);margin:6px 0 18px}
+.lhead h1{font-size:2.2rem;margin-top:10px;color:var(--ink);overflow-wrap:anywhere}
+.lhead .kick{color:var(--c)}
+
+/* Detalle */
+.det{--c:var(--teal)}
+.det .kick{color:var(--c)}
+.det h1{font-size:2.3rem;margin:10px 0 14px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:6px 12px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:.85rem}
+.chip b{color:var(--mute);font-weight:600;margin-right:4px}
+.sec{margin-top:30px}
+.sec>h3{font-size:1.3rem;margin-bottom:12px}
+.vid{margin-bottom:20px}
+.vid p{margin:0 0 7px;font-weight:600}
+video{width:100%;max-height:70vh;border-radius:14px;background:#000;display:block}
+.photos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.photos button{padding:0;border:0;background:none;text-align:left;cursor:zoom-in}
+.photos img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:12px;background:#E9ECEE}
+.photos span{display:block;font-size:.84rem;color:var(--mute);padding:6px 2px 0}
+.text{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+.empty{padding:44px 8px;text-align:center;color:var(--mute)}
+.foot{margin:44px 0 28px;text-align:center;color:var(--mute);font-size:.85rem}
+.foot .pill{margin-left:6px}
+
+/* Diálogos */
+dialog{border:0;border-radius:20px;padding:0;width:min(560px,94vw);max-height:90vh;background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(20,24,28,.55)}
+.dlg{padding:22px 20px 20px}
+.dlg h2{font-size:1.65rem;margin-bottom:4px}
+label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 5px}
+.dlg input,.dlg textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.hint{color:var(--mute);font-size:.84rem;margin:6px 0 0}
+.mrow{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}
+.mrow .th{width:52px;height:52px;border-radius:8px;background:#E9ECEE;display:grid;place-items:center;overflow:hidden;flex:none;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:var(--mute)}
+.mrow .th img{width:100%;height:100%;object-fit:cover}
+.mrow input{flex:1;min-width:0;padding:9px 10px!important}
+.mrow .x{border:0;background:none;color:#B3261E;font-size:1.1rem;cursor:pointer;padding:8px}
+progress{width:100%;height:10px;accent-color:var(--teal);margin-top:10px}
+.msg{color:#B3261E;min-height:1.4em;margin-top:8px;font-size:.9rem}
+.cl{margin:0 0 18px}
+.cl h3{font-size:1.2rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cl .tag{font:600 .66rem/1 "DM Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--teal);color:#fff;border-radius:99px;padding:4px 8px}
+.cl time{color:var(--mute);font-size:.85rem}
+.cl ul{margin:8px 0 0;padding-left:20px}
+.cl li{margin:3px 0}
+#dImg{width:min(96vw,900px);background:#000;color:#fff}
+#dImg img{width:100%;max-height:80vh;object-fit:contain;display:block}
+#dImg p{margin:0;padding:10px 16px 0}
+#dImg .acts{padding:0 16px 14px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="weave"></div>
-<header>
-  <h1>Bailes del conjunto</h1>
-  <p>Mira cada baile, su significado y su letra.</p>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#/" aria-label="Huilén, conjunto folclórico. Ir al inicio"><img src="logo.png" alt="Huilén conjunto folclórico"></a>
+    <button class="pill" id="btnVer" aria-label="Ver versión y cambios"></button>
+    <span id="adminBar"></span>
+  </div>
+  <div class="line"></div>
 </header>
-<div class="bar">
-  <input id="q" type="search" placeholder="Buscar baile, país o región" aria-label="Buscar">
-  <button id="btnAdmin" class="sec">Ingreso admin</button>
-</div>
-<div id="chips" class="chips"></div>
-<main id="list"></main>
 
-<dialog id="dView"><div class="dlg" id="viewBody"></div></dialog>
+<main class="wrap">
+  <div id="searchbox" class="search" hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Buscar baile, cuadro, país o región" aria-label="Buscar">
+  </div>
+  <div id="view"></div>
+  <div class="foot">Conjunto folclórico Huilén <button class="pill" id="btnVer2"></button></div>
+</main>
 
-<dialog id="dLogin"><form class="dlg" id="fLogin" method="dialog">
-  <h2>Entrar al equipo</h2>
+<dialog id="dLogin"><form class="dlg" id="fLogin">
+  <h2>Ingreso admin</h2>
+  <p class="hint">Solo para quienes pueden subir y editar bailes.</p>
   <label for="em">Correo</label><input id="em" type="email" autocomplete="username" required>
   <label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password" required>
   <div class="msg" id="loginMsg"></div>
-  <div class="acts"><button type="button" class="sec" data-close>Cancelar</button><button class="fuc">Entrar</button></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc">Entrar</button></div>
 </form></dialog>
 
-<dialog id="dAdd"><form class="dlg" id="fAdd" method="dialog">
-  <h2>Agregar baile</h2>
+<dialog id="dAdd"><form class="dlg" id="fAdd">
+  <h2 id="addTitle">Agregar baile</h2>
   <label for="nombre">Nombre del baile</label><input id="nombre" required>
-  <label for="pais">País</label><input id="pais" list="paises" required><datalist id="paises"></datalist>
-  <label for="region">Región o zona</label><input id="region" list="regiones" placeholder="Ej: Zona central" required><datalist id="regiones"></datalist>
+  <label for="cuadro">Cuadro</label><input id="cuadro" list="lCuadros" placeholder="Ej: Rapa Nui, Patagonia, Ecuador" required><datalist id="lCuadros"></datalist>
+  <div class="two">
+    <div><label for="pais">País</label><input id="pais" list="lPaises" required><datalist id="lPaises"></datalist></div>
+    <div><label for="region">Región o zona</label><input id="region" list="lRegiones" required><datalist id="lRegiones"></datalist></div>
+  </div>
   <label for="signif">Significado</label><textarea id="signif" rows="3"></textarea>
-  <label for="letra">Letra (opcional)</label><textarea id="letra" rows="4"></textarea>
-  <label for="video">Video de ensayo (máx. 100 MB)</label><input id="video" type="file" accept="video/*">
+  <label for="letra">Letra o traducción (opcional)</label><textarea id="letra" rows="4"></textarea>
+  <label>Videos y fotos</label>
+  <div id="mlist"></div>
+  <label class="btn small" for="files" style="display:inline-block;margin:4px 0 0;cursor:pointer">+ Agregar videos o fotos</label>
+  <input id="files" type="file" accept="video/*,image/*" multiple hidden>
+  <p class="hint">Videos de hasta 100 MB. Las fotos se reducen solas antes de subirlas. Ponle un título a cada archivo (ej. "Zapateo", "Coreografía 2").</p>
   <progress id="prog" max="100" value="0" hidden></progress>
-  <div class="msg" id="addMsg"></div>
-  <div class="acts"><button type="button" class="sec" data-close>Cancelar</button><button class="fuc" id="btnSave">Guardar baile</button></div>
+  <div class="msg" id="addMsg" role="alert"></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="btnSave">Guardar baile</button></div>
 </form></dialog>
+
+<dialog id="dVer"><div class="dlg">
+  <h2>Novedades</h2>
+  <p class="hint" id="verNow" style="margin-bottom:18px"></p>
+  <div id="verList"></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cerrar</button></div>
+</div></dialog>
+
+<dialog id="dImg"><img id="imgBig" alt=""><p id="imgCap"></p><div class="acts"><button type="button" class="btn small" data-close style="color:#fff;border-color:#fff">Cerrar</button></div></dialog>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {getFirestore,collection,addDoc,deleteDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
-// PEGA AQUÍ TUS DATOS DE CLOUDINARY
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
+
+const APP_VERSION="1.1.0";
+const CHANGELOG=[
+  {v:"1.1.0",fecha:"12 de octubre de 2026",items:[
+    "Los bailes ahora se organizan por cuadros (Rapa Nui, Patagonia, Ecuador…).",
+    "Cada baile puede tener varios videos y fotos, cada uno con su título: coreografías, zapateos, etc.",
+    "Los administradores pueden editar un baile ya publicado.",
+    "Nueva interfaz y nuevo logo del conjunto.",
+    "Se agregó la versión de la app y este registro de cambios."]},
+  {v:"1.0.0",fecha:"Octubre de 2026",items:[
+    "Primera versión: catálogo de bailes por país y región, con video, significado y letra.",
+    "Ingreso de administradores para agregar y eliminar bailes."]}
+];
 
 const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let bailes=[],pais="",txt="",user=null;
+const safe=u=>/^https:\/\//i.test(u||"")?u:"";
+const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").toLowerCase().trim();
+const PAL=["#0E7C86","#C2308A","#7B3FBF","#1479B8"];
+const colorOf=k=>{let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return PAL[h%PAL.length]};
+const mediaOf=b=>Array.isArray(b.media)?b.media:(b.videoUrl?[{tipo:"video",url:b.videoUrl,titulo:"Video de ensayo"}]:[]);
+const cuadroOf=b=>String(b.cuadro||"").replace(/\s+/g," ").trim()||"Sin cuadro";
+const MAX_VIDEO=100*1024*1024;
 
-onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));render()},
-  e=>{$("list").innerHTML=`<div class="empty">No se pudo cargar el catálogo. Revisa la config de Firebase.</div>`});
-onAuthStateChanged(auth,u=>{user=u;$("btnAdmin").textContent=u?"Agregar baile":"Ingreso admin";render()});
+let bailes=[],loaded=false,loadErr=false,txt="",user=null;
+
+/* ---------- Datos ---------- */
+onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),
+  s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;loadErr=false;updateLists();render()},
+  ()=>{loaded=true;loadErr=true;render()});
+onAuthStateChanged(auth,u=>{user=u;renderAdminBar();render()});
+
+function cuadros(){
+  const m=new Map();
+  for(const b of bailes){const n=cuadroOf(b),k=norm(n);if(!m.has(k))m.set(k,{key:k,name:n,items:[]});m.get(k).items.push(b)}
+  const out=[...m.values()];
+  out.forEach(c=>c.items.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es")));
+  return out.sort((a,b)=>a.key==="sin cuadro"?1:b.key==="sin cuadro"?-1:a.name.localeCompare(b.name,"es"));
+}
+function updateLists(){
+  const uniq=f=>[...new Set(bailes.map(f).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es")).map(v=>`<option value="${esc(v)}">`).join("");
+  $("lCuadros").innerHTML=uniq(b=>b.cuadro&&String(b.cuadro).trim());
+  $("lPaises").innerHTML=uniq(b=>b.pais);
+  $("lRegiones").innerHTML=uniq(b=>b.region);
+}
+
+/* ---------- Vistas ---------- */
+const getRoute=()=>location.hash.replace(/^#\/?/,"").split("/").filter(Boolean).map(decodeURIComponent);
+const plural=(n,s)=>`${n} ${s}${n===1?"":"s"}`;
+
+function rowHtml(b,showCuadro){
+  const c=cuadroOf(b),m=mediaOf(b),v=m.filter(x=>x.tipo==="video").length,f=m.length-v;
+  const meta=[showCuadro?c:"",b.pais,b.region].filter(Boolean).join(" · ");
+  const cnt=[v?plural(v,"video"):"",f?plural(f,"foto"):""].filter(Boolean).join(" · ")||"Sin videos ni fotos aún";
+  return `<a class="row" style="--c:${colorOf(norm(c))}" href="#/b/${esc(b.id)}"><span><b>${esc(b.nombre)}</b><small>${esc(meta)}</small><small>${cnt}</small></span><span class="go" aria-hidden="true">›</span></a>`;
+}
+
+function homeView(){
+  const q=norm(txt);
+  if(q){
+    const f=bailes.filter(b=>norm([b.nombre,cuadroOf(b),b.pais,b.region].join(" ")).includes(q));
+    return `<p class="kick" style="margin:18px 0 12px">${plural(f.length,"resultado")}</p>`+(f.length?f.map(b=>rowHtml(b,true)).join(""):`<div class="empty">Ningún baile coincide con tu búsqueda.</div>`);
+  }
+  const cs=cuadros();
+  const hero=`<div class="hero"><span class="kick">Repertorio</span><h1>Nuestros cuadros</h1><p>Elige un cuadro para ver sus bailes, videos y letras.</p></div>`;
+  if(!cs.length)return hero+`<div class="empty">Aún no hay bailes. ${user?"Agrega el primero con el botón de arriba.":"El equipo los irá subiendo."}</div>`;
+  return hero+`<div class="grid">`+cs.map(c=>`<a class="card" style="--c:${colorOf(c.key)}" href="#/c/${encodeURIComponent(c.key)}"><span class="ini" aria-hidden="true">${esc(c.name.charAt(0).toUpperCase())}</span><h2>${esc(c.name)}</h2><small>${plural(c.items.length,"baile")}</small></a>`).join("")+`</div>`;
+}
+
+function cuadroView(key){
+  const c=cuadros().find(x=>x.key===key);
+  const back=`<a class="back" href="#/">← Todos los cuadros</a>`;
+  if(!c)return back+`<div class="empty">Ese cuadro ya no existe.</div>`;
+  return back+`<div class="lhead" style="--c:${colorOf(c.key)}"><span class="kick">Cuadro · ${plural(c.items.length,"baile")}</span><h1>${esc(c.name)}</h1></div>`+c.items.map(b=>rowHtml(b,false)).join("");
+}
+
+function detailView(id){
+  const b=bailes.find(x=>x.id===id);
+  if(!b)return `<a class="back" href="#/">← Todos los cuadros</a><div class="empty">No encontré ese baile.</div>`;
+  const c=cuadroOf(b),ck=norm(c),m=mediaOf(b);
+  const vids=m.filter(x=>x.tipo==="video"&&safe(x.url)),pics=m.filter(x=>x.tipo!=="video"&&safe(x.url));
+  return `<a class="back" href="#/c/${encodeURIComponent(ck)}">← ${esc(c)}</a>
+  <article class="det" style="--c:${colorOf(ck)}">
+    <span class="kick">Cuadro ${esc(c)}</span>
+    <h1>${esc(b.nombre)}</h1>
+    <div class="chips">${b.pais?`<span class="chip"><b>País</b>${esc(b.pais)}</span>`:""}${b.region?`<span class="chip"><b>Región</b>${esc(b.region)}</span>`:""}</div>
+    ${vids.length?`<section class="sec"><h3>Videos</h3>${vids.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video></div>`).join("")}</section>`:""}
+    ${pics.length?`<section class="sec"><h3>Fotos</h3><div class="photos">${pics.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||b.nombre)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div></section>`:""}
+    ${!vids.length&&!pics.length?`<p class="hint" style="margin-top:26px">Este baile aún no tiene videos ni fotos.</p>`:""}
+    ${b.significado?`<section class="sec"><h3>Significado</h3><div class="text">${esc(b.significado)}</div></section>`:""}
+    ${b.letra?`<section class="sec"><h3>Letra</h3><div class="text">${esc(b.letra)}</div></section>`:""}
+    ${user?`<div class="admin-acts"><button class="btn small" data-act="edit" data-id="${esc(b.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(b.id)}">Eliminar baile</button></div>`:""}
+  </article>`;
+}
 
 function render(){
-  const paises=[...new Set(bailes.map(b=>b.pais))].sort();
-  $("chips").innerHTML=`<button class="chip" aria-pressed="${!pais}" data-p="">Todos</button>`+paises.map(p=>`<button class="chip" aria-pressed="${pais===p}" data-p="${esc(p)}">${esc(p)}</button>`).join("");
-  $("paises").innerHTML=paises.map(p=>`<option value="${esc(p)}">`).join("");
-  $("regiones").innerHTML=[...new Set(bailes.map(b=>b.region))].sort().map(r=>`<option value="${esc(r)}">`).join("");
-  const t=txt.toLowerCase();
-  const f=bailes.filter(b=>(!pais||b.pais===pais)&&(!t||[b.nombre,b.pais,b.region].join(" ").toLowerCase().includes(t)));
-  if(!f.length){$("list").innerHTML=`<div class="empty">${bailes.length?"Ningún baile coincide con tu búsqueda.":"Aún no hay bailes. "+(user?"Agrega el primero con el botón de arriba.":"El equipo los irá subiendo.")}</div>`;return}
-  const g={};f.forEach(b=>{(g[b.pais+" · "+b.region]??=[]).push(b)});
-  $("list").innerHTML=Object.keys(g).sort().map(k=>`<h3 class="region">${esc(k)}</h3>`+g[k].map(b=>`<button class="row" data-id="${b.id}"><span><b>${esc(b.nombre)}</b><small>${b.videoUrl?"Con video":"Sin video aún"}</small></span><span class="go" aria-hidden="true">›</span></button>`).join("")).join("");
+  const [t,id]=getRoute();
+  $("searchbox").hidden=!!t;
+  if(!loaded){$("view").innerHTML=`<div class="empty">Cargando…</div>`;return}
+  if(loadErr){$("view").innerHTML=`<div class="empty">No se pudo cargar el catálogo. Revisa tu conexión o la configuración de Firebase.</div>`;return}
+  $("view").innerHTML=t==="c"?cuadroView(id):t==="b"?detailView(id):homeView();
 }
+function renderAdminBar(){
+  $("adminBar").innerHTML=user
+    ?`<button class="btn small acc" data-act="new">+ Agregar baile</button> <button class="btn small" data-act="out">Salir</button>`
+    :`<button class="btn small" data-act="login">Ingreso admin</button>`;
+}
+window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
 
-document.addEventListener("click",e=>{
-  const c=e.target.closest(".chip");if(c){pais=c.dataset.p;render();return}
-  const r=e.target.closest(".row");if(r){openView(r.dataset.id);return}
-  if(e.target.matches("[data-close]"))e.target.closest("dialog").close();
-});
+/* ---------- Versión y changelog ---------- */
+for(const id of ["btnVer","btnVer2"])$(id).textContent="v"+APP_VERSION;
+$("verNow").textContent="Versión actual: "+APP_VERSION;
+$("verList").innerHTML=CHANGELOG.map((c,i)=>`<div class="cl"><h3>Versión ${esc(c.v)}${i===0?`<span class="tag">Actual</span>`:""}</h3><time>${esc(c.fecha)}</time><ul>${c.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
+
+/* ---------- Eventos globales ---------- */
 $("q").oninput=e=>{txt=e.target.value;render()};
-$("btnAdmin").onclick=()=>user?($("fAdd").reset(),$("addMsg").textContent="",$("dAdd").showModal()):$("dLogin").showModal();
+document.addEventListener("click",e=>{
+  const close=e.target.closest("[data-close]");if(close){close.closest("dialog").close();return}
+  if(e.target.closest("#btnVer,#btnVer2")){$("dVer").showModal();return}
+  const z=e.target.closest("[data-zoom]");
+  if(z){$("imgBig").src=z.dataset.zoom;$("imgBig").alt=z.dataset.cap||"Foto";$("imgCap").textContent=z.dataset.cap||"";$("dImg").showModal();return}
+  const a=e.target.closest("[data-act]");if(!a)return;
+  const act=a.dataset.act;
+  if(act==="login")$("dLogin").showModal();
+  else if(act==="out")signOut(auth);
+  else if(act==="new")openForm(null);
+  else if(act==="edit")openForm(bailes.find(x=>x.id===a.dataset.id));
+  else if(act==="del")deleteBaile(a.dataset.id);
+});
 
-function openView(id){
+async function deleteBaile(id){
   const b=bailes.find(x=>x.id===id);if(!b)return;
-  $("viewBody").innerHTML=`<span class="tag">${esc(b.pais)} · ${esc(b.region)}</span><h2>${esc(b.nombre)}</h2>
-  ${b.videoUrl?`<video src="${esc(b.videoUrl)}" controls playsinline preload="metadata"></video>`:""}
-  ${b.significado?`<div class="sec-t">Significado</div><p>${esc(b.significado)}</p>`:""}
-  ${b.letra?`<div class="sec-t">Letra</div><div class="lyr">${esc(b.letra)}</div>`:""}
-  <div class="acts">${user?`<button class="del" id="btnDel">Eliminar baile</button>`:""}<button class="sec" data-close>Cerrar</button></div>`;
-  const d=$("dView");d.showModal();d.addEventListener("close",()=>d.querySelector("video")?.pause(),{once:true});
-  $("btnDel")?.addEventListener("click",async()=>{
-    if(!confirm(`¿Eliminar "${b.nombre}" del catálogo?`))return;
-    try{await deleteDoc(doc(db,"bailes",b.id));d.close()}catch(err){alert("No se pudo eliminar: "+err.message)}
-  });
+  if(!confirm(`¿Eliminar "${b.nombre}" del catálogo?\n\nLos videos y fotos quedan guardados en Cloudinary; puedes borrarlos allá para liberar espacio.`))return;
+  try{await deleteDoc(doc(db,"bailes",id));location.hash="#/"}
+  catch(err){alert("No se pudo eliminar: "+err.message)}
 }
 
+/* ---------- Login ---------- */
 $("fLogin").onsubmit=async e=>{
   e.preventDefault();$("loginMsg").textContent="";
   try{await signInWithEmailAndPassword(auth,$("em").value,$("pw").value);$("dLogin").close();$("fLogin").reset()}
   catch{$("loginMsg").textContent="Correo o contraseña incorrectos."}
 };
 
-$("fAdd").onsubmit=async e=>{
-  e.preventDefault();const msg=$("addMsg"),btn=$("btnSave");msg.textContent="";
-  const file=$("video").files[0];
-  if(file&&file.size>100*1024*1024){msg.textContent="El video pesa más de 100 MB. Comprímelo antes de subirlo.";return}
-  btn.disabled=true;
+/* ---------- Formulario de baile ---------- */
+let editId=null,fm=[];
+function openForm(b){
+  editId=b?b.id:null;
+  fm=b?mediaOf(b).map(x=>({tipo:x.tipo==="video"?"video":"image",url:x.url,titulo:x.titulo||""})):[];
+  $("fAdd").reset();
+  $("addTitle").textContent=b?"Editar baile":"Agregar baile";
+  if(b){$("nombre").value=b.nombre||"";$("cuadro").value=String(b.cuadro||"").trim();$("pais").value=b.pais||"";$("region").value=b.region||"";$("signif").value=b.significado||"";$("letra").value=b.letra||""}
+  $("addMsg").textContent="";$("prog").hidden=true;$("btnSave").disabled=false;
+  renderFm();$("dAdd").showModal();
+}
+function renderFm(){
+  $("mlist").innerHTML=fm.map((x,i)=>`<div class="mrow"><div class="th">${x.tipo==="video"?"VIDEO":`<img alt="" src="${esc(x.prev||safe(x.url))}">`}</div><input data-mt="${i}" value="${esc(x.titulo)}" placeholder="Título (opcional)" aria-label="Título del archivo ${i+1}"><button type="button" class="x" data-mrm="${i}" aria-label="Quitar archivo ${i+1}">✕</button></div>`).join("")||`<p class="hint">Aún no hay videos ni fotos.</p>`;
+}
+$("mlist").addEventListener("input",e=>{const i=e.target.dataset.mt;if(i!==undefined)fm[i].titulo=e.target.value});
+$("mlist").addEventListener("click",e=>{const i=e.target.closest("[data-mrm]")?.dataset.mrm;if(i!==undefined){fm.splice(+i,1);renderFm()}});
+$("files").onchange=e=>{
+  const msg=$("addMsg");msg.textContent="";
+  for(const f of e.target.files){
+    const tipo=f.type.startsWith("video")?"video":f.type.startsWith("image")?"image":null;
+    if(!tipo){msg.textContent=`"${f.name}" no es un video ni una foto.`;continue}
+    if(tipo==="video"&&f.size>MAX_VIDEO){msg.textContent=`"${f.name}" pesa más de 100 MB. Comprímelo antes de subirlo.`;continue}
+    fm.push({tipo,file:f,titulo:"",prev:tipo==="image"?URL.createObjectURL(f):""});
+  }
+  e.target.value="";renderFm();
+};
+
+async function shrink(file){
   try{
-    let videoUrl="",videoId="";
-    if(file){
-      if(!CLOUD_NAME||!UPLOAD_PRESET)throw new Error("falta configurar Cloudinary");
-      $("prog").hidden=false;
-      const r=await new Promise((ok,no)=>{
-        const x=new XMLHttpRequest(),fd=new FormData();
-        fd.append("file",file);fd.append("upload_preset",UPLOAD_PRESET);
-        x.open("POST",`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
-        x.upload.onprogress=ev=>{if(ev.lengthComputable)$("prog").value=ev.loaded/ev.total*100};
-        x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}x.status===200?ok(j):no(new Error(j.error?.message||"error de subida"))};
-        x.onerror=()=>no(new Error("sin conexión"));
-        x.send(fd);
-      });
-      videoUrl=r.secure_url;videoId=r.public_id;
+    const bmp=await createImageBitmap(file);
+    const s=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+    const c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);
+    c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.82));
+    return blob?new File([blob],file.name.replace(/\.[^.]+$/,"")+".jpg",{type:"image/jpeg"}):file;
+  }catch{return file}
+}
+function uploadFile(file,onProg){
+  return new Promise((ok,no)=>{
+    const x=new XMLHttpRequest(),fd=new FormData();
+    fd.append("file",file);fd.append("upload_preset",UPLOAD_PRESET);
+    x.open("POST",`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+    x.upload.onprogress=ev=>{if(ev.lengthComputable)onProg(ev.loaded/ev.total*100)};
+    x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch{}x.status===200?ok(j):no(new Error(j.error?.message||"error de subida"))};
+    x.onerror=()=>no(new Error("sin conexión"));
+    x.send(fd);
+  });
+}
+
+$("fAdd").onsubmit=async e=>{
+  e.preventDefault();
+  const msg=$("addMsg"),btn=$("btnSave");msg.textContent="";btn.disabled=true;
+  try{
+    const total=fm.filter(x=>x.file).length;let n=0;
+    for(const x of fm){
+      if(!x.file)continue;
+      n++;$("prog").hidden=false;$("prog").value=0;
+      msg.style.color="var(--mute)";msg.textContent=`Subiendo ${n} de ${total}…`;
+      const file=x.tipo==="image"?await shrink(x.file):x.file;
+      const r=await uploadFile(file,p=>{$("prog").value=p});
+      x.url=r.secure_url;x.tipo=r.resource_type==="video"?"video":"image";delete x.file;delete x.prev;
     }
-    await addDoc(collection(db,"bailes"),{nombre:$("nombre").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),significado:$("signif").value.trim(),letra:$("letra").value.trim(),videoUrl,videoId,creado:serverTimestamp()});
+    msg.style.color="";msg.textContent="";
+    const data={
+      nombre:$("nombre").value.trim(),cuadro:$("cuadro").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),
+      significado:$("signif").value.trim(),letra:$("letra").value.trim(),
+      media:fm.map(x=>({tipo:x.tipo,url:x.url,titulo:(x.titulo||"").trim()}))
+    };
+    if(editId)await updateDoc(doc(db,"bailes",editId),{...data,actualizado:serverTimestamp()});
+    else await addDoc(collection(db,"bailes"),{...data,creado:serverTimestamp()});
     $("dAdd").close();
-  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  }catch(err){msg.style.color="";msg.textContent="No se pudo guardar: "+err.message+(fm.some(x=>x.file)?"":" (los archivos ya subidos no se vuelven a subir si reintentas).")}
   finally{btn.disabled=false;$("prog").hidden=true;$("prog").value=0}
 };
 
+render();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </body>
