@@ -1,22 +1,14 @@
-# Bailes del Conjunto (PWA)
-1. Firebase Console: crea proyecto, activa **Firestore**, **Authentication (email/contraseña)** y **Storage** (requiere Blaze; crea una alerta de presupuesto).
-2. En Configuración del proyecto > Tus apps > Web: copia el `firebaseConfig` y pégalo en `index.html`.
-3. En Authentication crea a mano los usuarios que podrán subir (los "del equipo").
-4. Pega estas reglas.
+# Huilén · Bailes del conjunto (PWA) — v1.1.0
 
-**Firestore**
-```
-rules_version='2';
-service cloud.firestore { match /databases/{d}/documents {
-  match /bailes/{id} { allow read: if true; allow write: if request.auth != null; } } }
-```
-**Storage**
-```
-rules_version='2';
-service firebase.storage { match /b/{b}/o {
-  match /videos/{f} { allow read: if true;
-    allow write: if request.auth != null && request.resource.size < 150*1024*1024
-                 && request.resource.contentType.matches('video/.*');
-    allow delete: if request.auth != null; } } }
-```
-5. Sube la carpeta a GitHub y activa GitHub Pages. En Authentication > Settings > Authorized domains agrega `tuusuario.github.io`.
+## Archivos (súbelos todos a la raíz del repo)
+index.html, manifest.json, sw.js, logo.png, favicon.png, apple-touch-icon.png,
+icon-192.png, icon-512.png, icon-maskable-512.png, README.md
+(el antiguo icon.svg ya no se usa; puedes borrarlo del repo)
+
+## Cloudinary: un cambio necesario para las fotos
+Settings > Upload > Upload presets > `videos_bailes` > pestaña "Optimize and Deliver" >
+**Allowed formats**: `mp4, mov, webm, jpg, jpeg, png, webp` > Save.
+
+## Firebase
+Sin cambios. Los bailes antiguos siguen funcionando: aparecen en "Sin cuadro"
+hasta que los edites (Editar baile > escribe el cuadro > Guardar).
