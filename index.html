@@ -112,6 +112,15 @@ progress{width:100%;height:10px;accent-color:var(--teal);margin-top:10px}
 #dImg img{width:100%;max-height:80vh;object-fit:contain;display:block}
 #dImg p{margin:0;padding:10px 16px 0}
 #dImg .acts{padding:0 16px 14px}
+.tabs{display:flex;gap:4px;margin:18px 0 6px;border-bottom:1px solid var(--line)}
+.tabs a{padding:11px 14px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs a.on{color:var(--ink);border-bottom-color:var(--c)}
+.vgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+@media(min-width:640px){.vgrid{grid-template-columns:repeat(3,1fr)}}
+.vgrid figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.vgrid img,.nofoto{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#fff}
+.nofoto{display:grid;place-items:center;background:#EEF1F2;color:var(--mute);font-size:.85rem}
+.vgrid figcaption{padding:10px 12px 12px;font-weight:600;font-size:.92rem;line-height:1.3}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -180,8 +189,11 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="1.1.0";
+const APP_VERSION="1.2.0";
 const CHANGELOG=[
+  {v:"1.2.0",fecha:"14 de octubre de 2026",items:[
+    "Todos los cuadros aparecen en la lista, aunque aún no tengan videos.",
+    "Nueva pestaña Vestuario en cada cuadro, con foto y nombre de cada prenda."]},
   {v:"1.1.0",fecha:"12 de octubre de 2026",items:[
     "Los bailes ahora se organizan por cuadros (Rapa Nui, Patagonia, Ecuador…).",
     "Cada baile puede tener varios videos y fotos, cada uno con su título: coreografías, zapateos, etc.",
@@ -193,6 +205,7 @@ const CHANGELOG=[
     "Ingreso de administradores para agregar y eliminar bailes."]}
 ];
 
+const VEST_DATA={"cuadros":["Huaso","Patagonia","Rapa Nui","Diablada (Cóndor)","Diablada (Oso)","Diablada (Viejo)","Diablada (Chuta)","Diablada (Diablos)","Antawaras","Gitanos","Tinkus","Argentina","Perú (Alcatraz)","Perú (Huaylarsh)","Perú (Marinera Limeña)","Perú (Marinera Norteña)","Perú (Tondero)","Perú (Vals)","Paraguay","Colombia (Cumbia)","Colombia (Tolima)","Colombia (Tambora)","Colombia (San Juanero)","Tobas (Cacique)","Tobas (Guerreros)","Tobas (Izozog)","Venezuela","Ecuador","Jalisco","Veracruz","Yucatán","Sonora","Tabasco","Tamaulipas","Michoacán (Viejitos)","Michoacán (Pescado)"],"vest":{"Huaso":{"fuente":"excel","items":[{"n":"Camisa azul","f":null},{"n":"Manta azul","f":null},{"n":"Chasca dorada","f":null},{"n":"Ribete","f":null}]},"Patagonia":{"fuente":"excel","items":[{"n":"Bombacho negro","f":null},{"n":"Faja (Arg)","f":null},{"n":"Rastra (Arg)","f":null},{"n":"Boina","f":null},{"n":"Pañuelo morado","f":null}]},"Rapa Nui":{"fuente":"word","items":[{"n":"Faldín de rafia","f":"fotos/730a4b9cb7.jpg"}]},"Diablada (Cóndor)":{"fuente":"excel","items":[{"n":"Pijama negro","f":null},{"n":"Puños","f":null},{"n":"Botas","f":null},{"n":"Pechera","f":null},{"n":"Penca","f":null},{"n":"Punta","f":null},{"n":"Careta","f":null}]},"Diablada (Oso)":{"fuente":"excel","items":[{"n":"Pijama","f":null},{"n":"Pantuflas","f":null},{"n":"Guantes","f":null},{"n":"Punta","f":null},{"n":"Careta","f":null}]},"Diablada (Viejo)":{"fuente":"excel","items":[{"n":"Camisa verde","f":null},{"n":"Pantalón","f":null},{"n":"Chaqueta","f":null},{"n":"Bastón","f":null},{"n":"Careta","f":null},{"n":"Botas de diablo","f":null},{"n":"Sombrero y pluma","f":null}]},"Diablada (Chuta)":{"fuente":"excel","items":[{"n":"Chaqueta","f":null},{"n":"Pantalón","f":null},{"n":"Botas grises","f":null},{"n":"Bolso","f":null},{"n":"Careta","f":null},{"n":"Sombrero","f":null}]},"Diablada (Diablos)":{"fuente":"word","items":[{"n":"Careta","f":null},{"n":"Chasca","f":null},{"n":"Pijama","f":null},{"n":"Pechera y penca","f":null},{"n":"Puños","f":null},{"n":"Botas","f":null},{"n":"Punta","f":null}]},"Antawaras":{"fuente":"ninguna","items":[]},"Gitanos":{"fuente":"ninguna","items":[]},"Tinkus":{"fuente":"ninguna","items":[]},"Argentina":{"fuente":"word","items":[{"n":"Bombacho rojo","f":"fotos/9cefa868f8.jpg"},{"n":"Chaqueta blanca","f":"fotos/e65273b084.jpg"},{"n":"Faja","f":"fotos/f1b812a5f8.jpg"},{"n":"Rastra","f":"fotos/9016656c99.jpg"},{"n":"Corbatín rojo","f":"fotos/e65273b084.jpg"},{"n":"Trucos","f":"fotos/5d3c2a3fb7.jpg"}]},"Perú (Alcatraz)":{"fuente":"excel","items":[{"n":"Chaquetilla roja","f":null},{"n":"Faja blanca","f":null},{"n":"Pantalón rojo","f":null}]},"Perú (Huaylarsh)":{"fuente":"excel","items":[{"n":"Chaquetilla rosada","f":null},{"n":"Pantalones negros","f":null},{"n":"Pañuelos (2)","f":null},{"n":"Sombrero","f":null}]},"Perú (Marinera Limeña)":{"fuente":"ninguna","items":[]},"Perú (Marinera Norteña)":{"fuente":"excel","items":[{"n":"Sombrero","f":null},{"n":"Faja","f":null}]},"Perú (Tondero)":{"fuente":"word","items":[{"n":"Escapulario","f":"fotos/a15ecd7f86.jpg"},{"n":"Camisa cuello mao (Venezuela)","f":"fotos/13e5ee5e05.jpg"},{"n":"Pantalón blanco (ex Tolima)","f":null},{"n":"Faja azul","f":"fotos/0d8f708c45.jpg"},{"n":"Sombrero","f":"fotos/e5e9b3a2af.jpg"},{"n":"Alforja","f":"fotos/4ced2e6f93.jpg"},{"n":"Pañuelo bordado","f":"fotos/a59df52ef2.jpg"}]},"Perú (Vals)":{"fuente":"word","items":[{"n":"Terno Negro 2 piezas","f":"fotos/bd4089ff5f.jpg"},{"n":"Camisa blanca","f":null},{"n":"Camiseta blanca","f":"fotos/c1c3aecf28.jpg"},{"n":"Ropa interior blanca","f":null},{"n":"Calcetas negras","f":null},{"n":"Zapatos negros","f":"fotos/73343a2882.jpg"},{"n":"Pañuelo blanco (limeña)","f":null}]},"Paraguay":{"fuente":"word","items":[{"n":"Camisa azul","f":"fotos/876e1d838b.jpg"},{"n":"Pantalón negro","f":"fotos/9336c39ef2.jpg"},{"n":"Fajas","f":"fotos/b73514a074.jpg"},{"n":"Pañuelo de cuello blanco","f":"fotos/ca4e2168af.jpg"},{"n":"Sombrero","f":"fotos/8e856c033b.jpg"}]},"Colombia (Cumbia)":{"fuente":"word","items":[{"n":"Camisa blanca con lineas","f":"fotos/c6f88e2a52.jpg"},{"n":"Pantalón café claro","f":null},{"n":"Pañuelo de cuello amarillo","f":null},{"n":"Faja amarilla","f":null},{"n":"Tula","f":null},{"n":"Sombrero","f":null}]},"Colombia (Tolima)":{"fuente":"word","items":[{"n":"Camisa de color","f":"fotos/f1c596cd22.jpg"},{"n":"Pantalón café claro","f":"fotos/8a733b2f00.jpg"},{"n":"Pañuelo de color","f":"fotos/78d0b41a61.jpg"},{"n":"Cinturón de cáñamo","f":"fotos/b9bed3ae46.jpg"},{"n":"Machete","f":"fotos/42d0feb8a7.jpg"},{"n":"Mantel","f":"fotos/c28e2be373.jpg"},{"n":"Sombrero","f":"fotos/44ca12a99a.jpg"},{"n":"Alpargata","f":"fotos/a4887ab332.jpg"}]},"Colombia (Tambora)":{"fuente":"word","items":[{"n":"Camisa de color","f":"fotos/603a0948f3.jpg"},{"n":"Pantalón café claro","f":"fotos/8a733b2f00.jpg"},{"n":"Pañuelo de color","f":"fotos/bd3843da20.jpg"},{"n":"Sombrero","f":"fotos/c974f48b75.jpg"}]},"Colombia (San Juanero)":{"fuente":"word","items":[{"n":"Camisa con lentejuelas","f":"fotos/94e6d65294.jpg"},{"n":"Pantalón café claro","f":"fotos/8a733b2f00.jpg"},{"n":"Pañuelo de cuello rojo","f":"fotos/6414d8630b.jpg"},{"n":"Sombrero","f":null},{"n":"Faja","f":"fotos/25eb674de6.jpg"},{"n":"Mantel","f":null},{"n":"Cinto o faja","f":null}]},"Tobas (Cacique)":{"fuente":"ninguna","items":[]},"Tobas (Guerreros)":{"fuente":"ninguna","items":[]},"Tobas (Izozog)":{"fuente":"ninguna","items":[]},"Venezuela":{"fuente":"word","items":[{"n":"Liqui-Liqui (chaqueta y pantalón)","f":"fotos/b323a43e87.jpg"},{"n":"Alpargatas (tradicionales)","f":"fotos/6b74e890de.jpg"},{"n":"Sombrero","f":"fotos/a3a91f72ee.jpg"},{"n":"Camisa cuello mao blanca","f":"fotos/13e5ee5e05.jpg"}]},"Ecuador":{"fuente":"word","items":[{"n":"Máscara","f":null},{"n":"Chalinas (1)","f":null},{"n":"Zamarro","f":null},{"n":"Sombrero con cintas (6)","f":null},{"n":"Faja","f":"fotos/ffb4a4114b.jpg"},{"n":"Alpargatas","f":"fotos/4696ba410e.jpg"},{"n":"Pañuelo seda","f":"fotos/9b010b2308.jpg"},{"n":"Chaquetilla negra","f":null},{"n":"Sombrero negro","f":null},{"n":"Faja extra","f":"fotos/ffb4a4114b.jpg"},{"n":"Poncho","f":null}]},"Jalisco":{"fuente":"excel","items":[{"n":"Sombrero","f":null},{"n":"Chaquetilla","f":null},{"n":"Chaqueta","f":null},{"n":"Pantalón","f":null},{"n":"Camisa blanca","f":null},{"n":"Moño","f":null},{"n":"Cinturón","f":null}]},"Veracruz":{"fuente":"excel","items":[{"n":"Pantalón blanco","f":null},{"n":"Camisa blanca","f":null},{"n":"Sombrero","f":null},{"n":"Paliacate","f":null}]},"Yucatán":{"fuente":"word","items":[{"n":"Filipina blanca","f":"fotos/13e5ee5e05.jpg"},{"n":"Zapatos blancos mexicanos","f":"fotos/0f06e3f729.jpg"},{"n":"Pantalón Blanco","f":"fotos/8648cd949e.jpg"},{"n":"Paliacate brillante (Veracruz)","f":"fotos/0315d05c95.jpg"},{"n":"Sombrero","f":"fotos/ffae458c0b.jpg"},{"n":"Charola","f":"fotos/22fb334400.jpg"}]},"Sonora":{"fuente":"word","items":[{"n":"Camisa roja","f":"fotos/4c02f8a48b.jpg"},{"n":"Pantalón negro recto","f":"fotos/77268c4edb.jpg"},{"n":"Cinturón","f":"fotos/a29b3630bd.jpg"},{"n":"Chaquetilla","f":"fotos/8350d819c6.jpg"},{"n":"Sombrero Blanco","f":"fotos/a3a91f72ee.jpg"},{"n":"Pañuelo rojo","f":"fotos/53298cb6f4.jpg"}]},"Tabasco":{"fuente":"ninguna","items":[]},"Tamaulipas":{"fuente":"ninguna","items":[]},"Michoacán (Viejitos)":{"fuente":"ninguna","items":[]},"Michoacán (Pescado)":{"fuente":"ninguna","items":[]}}};
 const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -214,6 +227,7 @@ onAuthStateChanged(auth,u=>{user=u;renderAdminBar();render()});
 
 function cuadros(){
   const m=new Map();
+  for(const n of VEST_DATA.cuadros){const k=norm(n);m.set(k,{key:k,name:n,items:[]})}
   for(const b of bailes){const n=cuadroOf(b),k=norm(n);if(!m.has(k))m.set(k,{key:k,name:n,items:[]});m.get(k).items.push(b)}
   const out=[...m.values()];
   out.forEach(c=>c.items.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es")));
@@ -246,14 +260,31 @@ function homeView(){
   const cs=cuadros();
   const hero=`<div class="hero"><span class="kick">Repertorio</span><h1>Nuestros cuadros</h1><p>Elige un cuadro para ver sus bailes, videos y letras.</p></div>`;
   if(!cs.length)return hero+`<div class="empty">Aún no hay bailes. ${user?"Agrega el primero con el botón de arriba.":"El equipo los irá subiendo."}</div>`;
-  return hero+`<div class="grid">`+cs.map(c=>`<a class="card" style="--c:${colorOf(c.key)}" href="#/c/${encodeURIComponent(c.key)}"><span class="ini" aria-hidden="true">${esc(c.name.charAt(0).toUpperCase())}</span><h2>${esc(c.name)}</h2><small>${plural(c.items.length,"baile")}</small></a>`).join("")+`</div>`;
+  return hero+`<div class="grid">`+cs.map(c=>`<a class="card" style="--c:${colorOf(c.key)}" href="#/c/${encodeURIComponent(c.key)}"><span class="ini" aria-hidden="true">${esc(c.name.charAt(0).toUpperCase())}</span><h2>${esc(c.name)}</h2><small>${c.items.length?plural(c.items.length,"baile"):"Sin videos aún"}</small></a>`).join("")+`</div>`;
 }
 
+function tabsHtml(key,active,color){
+  const k=encodeURIComponent(key);
+  return `<nav class="tabs" style="--c:${color}" aria-label="Secciones del cuadro"><a href="#/c/${k}" ${active==="b"?'aria-current="page" class="on"':""}>Bailes</a><a href="#/c/${k}/v" ${active==="v"?'aria-current="page" class="on"':""}>Vestuario</a></nav>`;
+}
 function cuadroView(key){
   const c=cuadros().find(x=>x.key===key);
   const back=`<a class="back" href="#/">← Todos los cuadros</a>`;
   if(!c)return back+`<div class="empty">Ese cuadro ya no existe.</div>`;
-  return back+`<div class="lhead" style="--c:${colorOf(c.key)}"><span class="kick">Cuadro · ${plural(c.items.length,"baile")}</span><h1>${esc(c.name)}</h1></div>`+c.items.map(b=>rowHtml(b,false)).join("");
+  const col=colorOf(c.key);
+  return back+`<div class="lhead" style="--c:${col}"><span class="kick">Cuadro · ${c.items.length?plural(c.items.length,"baile"):"sin videos aún"}</span><h1>${esc(c.name)}</h1></div>`+tabsHtml(key,"b",col)+(c.items.length?c.items.map(b=>rowHtml(b,false)).join(""):`<div class="empty">Este cuadro aún no tiene bailes con video. Revisa su pestaña Vestuario.</div>`);
+}
+const SAFE_FOTO=/^fotos\/[a-f0-9]+\.jpg$/;
+function vestuarioView(key){
+  const name=VEST_DATA.cuadros.find(n=>norm(n)===key);
+  const back=`<a class="back" href="#/">← Todos los cuadros</a>`;
+  if(!name)return back+`<div class="empty">Ese cuadro ya no existe.</div>`;
+  const col=colorOf(key),v=VEST_DATA.vest[name]||{fuente:"ninguna",items:[]};
+  const aviso=v.fuente==="excel"?`<p class="hint" style="margin:14px 0 0">Lista de prendas tomada del repertorio. Las fotos se irán agregando.</p>`:"";
+  const grid=v.items.length
+    ?`<div class="vgrid">`+v.items.map(i=>`<figure>${SAFE_FOTO.test(i.f||"")?`<img loading="lazy" src="${esc(i.f)}" alt="${esc(i.n)}">`:`<div class="nofoto">Sin foto aún</div>`}<figcaption>${esc(i.n)}</figcaption></figure>`).join("")+`</div>`
+    :`<div class="empty">Vestuario pendiente de cargar.</div>`;
+  return back+`<div class="lhead" style="--c:${col}"><span class="kick">Cuadro · Vestuario</span><h1>${esc(name)}</h1></div>`+tabsHtml(key,"v",col)+aviso+grid;
 }
 
 function detailView(id){
@@ -280,7 +311,7 @@ function render(){
   $("searchbox").hidden=!!t;
   if(!loaded){$("view").innerHTML=`<div class="empty">Cargando…</div>`;return}
   if(loadErr){$("view").innerHTML=`<div class="empty">No se pudo cargar el catálogo. Revisa tu conexión o la configuración de Firebase.</div>`;return}
-  $("view").innerHTML=t==="c"?cuadroView(id):t==="b"?detailView(id):homeView();
+  $("view").innerHTML=t==="c"?(getRoute()[2]==="v"?vestuarioView(id):cuadroView(id)):t==="b"?detailView(id):homeView();
 }
 function renderAdminBar(){
   $("adminBar").innerHTML=user
