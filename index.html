@@ -121,6 +121,14 @@ progress{width:100%;height:10px;accent-color:var(--teal);margin-top:10px}
 .vgrid img,.nofoto{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:#fff}
 .nofoto{display:grid;place-items:center;background:#EEF1F2;color:var(--mute);font-size:.85rem}
 .vgrid figcaption{padding:10px 12px 12px;font-weight:600;font-size:.92rem;line-height:1.3}
+.tabs.sub{margin-top:0;border-bottom:0;gap:8px;padding:12px 0 2px}
+.tabs.sub a{border:1.5px solid var(--line);border-radius:99px;background:#fff;margin:0;padding:8px 14px;font-size:.88rem}
+.tabs.sub a.on{background:var(--c);border-color:var(--c);color:#fff}
+.vtools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.vsub{font-size:1.15rem;margin:26px 0 0}
+.vact{display:flex;gap:6px;padding:0 12px 12px}
+.vgrid figure .vact .btn{padding:7px 12px;font-size:.78rem}
+select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -155,7 +163,8 @@ progress{width:100%;height:10px;accent-color:var(--teal);margin-top:10px}
 <dialog id="dAdd"><form class="dlg" id="fAdd">
   <h2 id="addTitle">Agregar baile</h2>
   <label for="nombre">Nombre del baile</label><input id="nombre" required>
-  <label for="cuadro">Cuadro</label><input id="cuadro" list="lCuadros" placeholder="Ej: Rapa Nui, Patagonia, Ecuador" required><datalist id="lCuadros"></datalist>
+  <label for="cuadro">Cuadro</label><input id="cuadro" list="lCuadros" placeholder="Ej: Perú, Colombia, Rapa Nui" required><datalist id="lCuadros"></datalist>
+  <label for="subtipo">Baile o subtipo (opcional)</label><input id="subtipo" list="lSubs" placeholder="Ej: Tondero, Cumbia"><datalist id="lSubs"></datalist>
   <div class="two">
     <div><label for="pais">País</label><input id="pais" list="lPaises" required><datalist id="lPaises"></datalist></div>
     <div><label for="region">Región o zona</label><input id="region" list="lRegiones" required><datalist id="lRegiones"></datalist></div>
@@ -170,6 +179,20 @@ progress{width:100%;height:10px;accent-color:var(--teal);margin-top:10px}
   <progress id="prog" max="100" value="0" hidden></progress>
   <div class="msg" id="addMsg" role="alert"></div>
   <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="btnSave">Guardar baile</button></div>
+</form></dialog>
+
+<dialog id="dVest"><form class="dlg" id="fVest">
+  <h2 id="vTitle">Agregar prenda</h2>
+  <label for="vNom">Nombre de la prenda</label><input id="vNom" required>
+  <div class="two">
+    <div><label for="vGen">Vestuario de</label><select id="vGen"><option value="h">Hombre</option><option value="m">Mujer</option></select></div>
+    <div><label for="vAlc">Se usa en</label><select id="vAlc"></select></div>
+  </div>
+  <label for="vFoto">Foto (opcional)</label><input id="vFoto" type="file" accept="image/*">
+  <p class="hint" id="vActual"></p>
+  <progress id="vProg" max="100" value="0" hidden></progress>
+  <div class="msg" id="vMsg" role="alert"></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="vSave">Guardar prenda</button></div>
 </form></dialog>
 
 <dialog id="dVer"><div class="dlg">
@@ -189,8 +212,13 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="1.2.0";
+const APP_VERSION="1.3.0";
 const CHANGELOG=[
+  {v:"1.3.0",fecha:"14 de octubre de 2026",items:[
+    "Los cuadros ahora agrupan sus bailes: por ejemplo, el cuadro Perú incluye Tondero, Huaylarsh, Marineras y Vals.",
+    "El vestuario se separa en vestuario hombre y vestuario mujer.",
+    "Cada prenda puede ser de todo el cuadro o de un baile en particular.",
+    "Los administradores pueden agregar, editar y eliminar prendas, con foto, desde la app."]},
   {v:"1.2.0",fecha:"14 de octubre de 2026",items:[
     "Todos los cuadros aparecen en la lista, aunque aún no tengan videos.",
     "Nueva pestaña Vestuario en cada cuadro, con foto y nombre de cada prenda."]},
@@ -206,6 +234,7 @@ const CHANGELOG=[
 ];
 
 const VEST_DATA={"cuadros":["Huaso","Patagonia","Rapa Nui","Diablada (Cóndor)","Diablada (Oso)","Diablada (Viejo)","Diablada (Chuta)","Diablada (Diablos)","Antawaras","Gitanos","Tinkus","Argentina","Perú (Alcatraz)","Perú (Huaylarsh)","Perú (Marinera Limeña)","Perú (Marinera Norteña)","Perú (Tondero)","Perú (Vals)","Paraguay","Colombia (Cumbia)","Colombia (Tolima)","Colombia (Tambora)","Colombia (San Juanero)","Tobas (Cacique)","Tobas (Guerreros)","Tobas (Izozog)","Venezuela","Ecuador","Jalisco","Veracruz","Yucatán","Sonora","Tabasco","Tamaulipas","Michoacán (Viejitos)","Michoacán (Pescado)"],"vest":{"Huaso":{"fuente":"excel","items":[{"n":"Camisa azul","f":null},{"n":"Manta azul","f":null},{"n":"Chasca dorada","f":null},{"n":"Ribete","f":null}]},"Patagonia":{"fuente":"excel","items":[{"n":"Bombacho negro","f":null},{"n":"Faja (Arg)","f":null},{"n":"Rastra (Arg)","f":null},{"n":"Boina","f":null},{"n":"Pañuelo morado","f":null}]},"Rapa Nui":{"fuente":"word","items":[{"n":"Faldín de rafia","f":"730a4b9cb7.jpg"}]},"Diablada (Cóndor)":{"fuente":"excel","items":[{"n":"Pijama negro","f":null},{"n":"Puños","f":null},{"n":"Botas","f":null},{"n":"Pechera","f":null},{"n":"Penca","f":null},{"n":"Punta","f":null},{"n":"Careta","f":null}]},"Diablada (Oso)":{"fuente":"excel","items":[{"n":"Pijama","f":null},{"n":"Pantuflas","f":null},{"n":"Guantes","f":null},{"n":"Punta","f":null},{"n":"Careta","f":null}]},"Diablada (Viejo)":{"fuente":"excel","items":[{"n":"Camisa verde","f":null},{"n":"Pantalón","f":null},{"n":"Chaqueta","f":null},{"n":"Bastón","f":null},{"n":"Careta","f":null},{"n":"Botas de diablo","f":null},{"n":"Sombrero y pluma","f":null}]},"Diablada (Chuta)":{"fuente":"excel","items":[{"n":"Chaqueta","f":null},{"n":"Pantalón","f":null},{"n":"Botas grises","f":null},{"n":"Bolso","f":null},{"n":"Careta","f":null},{"n":"Sombrero","f":null}]},"Diablada (Diablos)":{"fuente":"word","items":[{"n":"Careta","f":null},{"n":"Chasca","f":null},{"n":"Pijama","f":null},{"n":"Pechera y penca","f":null},{"n":"Puños","f":null},{"n":"Botas","f":null},{"n":"Punta","f":null}]},"Antawaras":{"fuente":"ninguna","items":[]},"Gitanos":{"fuente":"ninguna","items":[]},"Tinkus":{"fuente":"ninguna","items":[]},"Argentina":{"fuente":"word","items":[{"n":"Bombacho rojo","f":"9cefa868f8.jpg"},{"n":"Chaqueta blanca","f":"e65273b084.jpg"},{"n":"Faja","f":"f1b812a5f8.jpg"},{"n":"Rastra","f":"9016656c99.jpg"},{"n":"Corbatín rojo","f":"e65273b084.jpg"},{"n":"Trucos","f":"5d3c2a3fb7.jpg"}]},"Perú (Alcatraz)":{"fuente":"excel","items":[{"n":"Chaquetilla roja","f":null},{"n":"Faja blanca","f":null},{"n":"Pantalón rojo","f":null}]},"Perú (Huaylarsh)":{"fuente":"excel","items":[{"n":"Chaquetilla rosada","f":null},{"n":"Pantalones negros","f":null},{"n":"Pañuelos (2)","f":null},{"n":"Sombrero","f":null}]},"Perú (Marinera Limeña)":{"fuente":"ninguna","items":[]},"Perú (Marinera Norteña)":{"fuente":"excel","items":[{"n":"Sombrero","f":null},{"n":"Faja","f":null}]},"Perú (Tondero)":{"fuente":"word","items":[{"n":"Escapulario","f":"a15ecd7f86.jpg"},{"n":"Camisa cuello mao (Venezuela)","f":"13e5ee5e05.jpg"},{"n":"Pantalón blanco (ex Tolima)","f":null},{"n":"Faja azul","f":"0d8f708c45.jpg"},{"n":"Sombrero","f":"e5e9b3a2af.jpg"},{"n":"Alforja","f":"4ced2e6f93.jpg"},{"n":"Pañuelo bordado","f":"a59df52ef2.jpg"}]},"Perú (Vals)":{"fuente":"word","items":[{"n":"Terno Negro 2 piezas","f":"bd4089ff5f.jpg"},{"n":"Camisa blanca","f":null},{"n":"Camiseta blanca","f":"c1c3aecf28.jpg"},{"n":"Ropa interior blanca","f":null},{"n":"Calcetas negras","f":null},{"n":"Zapatos negros","f":"73343a2882.jpg"},{"n":"Pañuelo blanco (limeña)","f":null}]},"Paraguay":{"fuente":"word","items":[{"n":"Camisa azul","f":"876e1d838b.jpg"},{"n":"Pantalón negro","f":"9336c39ef2.jpg"},{"n":"Fajas","f":"b73514a074.jpg"},{"n":"Pañuelo de cuello blanco","f":"ca4e2168af.jpg"},{"n":"Sombrero","f":"8e856c033b.jpg"}]},"Colombia (Cumbia)":{"fuente":"word","items":[{"n":"Camisa blanca con lineas","f":"c6f88e2a52.jpg"},{"n":"Pantalón café claro","f":null},{"n":"Pañuelo de cuello amarillo","f":null},{"n":"Faja amarilla","f":null},{"n":"Tula","f":null},{"n":"Sombrero","f":null}]},"Colombia (Tolima)":{"fuente":"word","items":[{"n":"Camisa de color","f":"f1c596cd22.jpg"},{"n":"Pantalón café claro","f":"8a733b2f00.jpg"},{"n":"Pañuelo de color","f":"78d0b41a61.jpg"},{"n":"Cinturón de cáñamo","f":"b9bed3ae46.jpg"},{"n":"Machete","f":"42d0feb8a7.jpg"},{"n":"Mantel","f":"c28e2be373.jpg"},{"n":"Sombrero","f":"44ca12a99a.jpg"},{"n":"Alpargata","f":"a4887ab332.jpg"}]},"Colombia (Tambora)":{"fuente":"word","items":[{"n":"Camisa de color","f":"603a0948f3.jpg"},{"n":"Pantalón café claro","f":"8a733b2f00.jpg"},{"n":"Pañuelo de color","f":"bd3843da20.jpg"},{"n":"Sombrero","f":"c974f48b75.jpg"}]},"Colombia (San Juanero)":{"fuente":"word","items":[{"n":"Camisa con lentejuelas","f":"94e6d65294.jpg"},{"n":"Pantalón café claro","f":"8a733b2f00.jpg"},{"n":"Pañuelo de cuello rojo","f":"6414d8630b.jpg"},{"n":"Sombrero","f":null},{"n":"Faja","f":"25eb674de6.jpg"},{"n":"Mantel","f":null},{"n":"Cinto o faja","f":null}]},"Tobas (Cacique)":{"fuente":"ninguna","items":[]},"Tobas (Guerreros)":{"fuente":"ninguna","items":[]},"Tobas (Izozog)":{"fuente":"ninguna","items":[]},"Venezuela":{"fuente":"word","items":[{"n":"Liqui-Liqui (chaqueta y pantalón)","f":"b323a43e87.jpg"},{"n":"Alpargatas (tradicionales)","f":"6b74e890de.jpg"},{"n":"Sombrero","f":"a3a91f72ee.jpg"},{"n":"Camisa cuello mao blanca","f":"13e5ee5e05.jpg"}]},"Ecuador":{"fuente":"word","items":[{"n":"Máscara","f":null},{"n":"Chalinas (1)","f":null},{"n":"Zamarro","f":null},{"n":"Sombrero con cintas (6)","f":null},{"n":"Faja","f":"ffb4a4114b.jpg"},{"n":"Alpargatas","f":"4696ba410e.jpg"},{"n":"Pañuelo seda","f":"9b010b2308.jpg"},{"n":"Chaquetilla negra","f":null},{"n":"Sombrero negro","f":null},{"n":"Faja extra","f":"ffb4a4114b.jpg"},{"n":"Poncho","f":null}]},"Jalisco":{"fuente":"excel","items":[{"n":"Sombrero","f":null},{"n":"Chaquetilla","f":null},{"n":"Chaqueta","f":null},{"n":"Pantalón","f":null},{"n":"Camisa blanca","f":null},{"n":"Moño","f":null},{"n":"Cinturón","f":null}]},"Veracruz":{"fuente":"excel","items":[{"n":"Pantalón blanco","f":null},{"n":"Camisa blanca","f":null},{"n":"Sombrero","f":null},{"n":"Paliacate","f":null}]},"Yucatán":{"fuente":"word","items":[{"n":"Filipina blanca","f":"13e5ee5e05.jpg"},{"n":"Zapatos blancos mexicanos","f":"0f06e3f729.jpg"},{"n":"Pantalón Blanco","f":"8648cd949e.jpg"},{"n":"Paliacate brillante (Veracruz)","f":"0315d05c95.jpg"},{"n":"Sombrero","f":"ffae458c0b.jpg"},{"n":"Charola","f":"22fb334400.jpg"}]},"Sonora":{"fuente":"word","items":[{"n":"Camisa roja","f":"4c02f8a48b.jpg"},{"n":"Pantalón negro recto","f":"77268c4edb.jpg"},{"n":"Cinturón","f":"a29b3630bd.jpg"},{"n":"Chaquetilla","f":"8350d819c6.jpg"},{"n":"Sombrero Blanco","f":"a3a91f72ee.jpg"},{"n":"Pañuelo rojo","f":"53298cb6f4.jpg"}]},"Tabasco":{"fuente":"ninguna","items":[]},"Tamaulipas":{"fuente":"ninguna","items":[]},"Michoacán (Viejitos)":{"fuente":"ninguna","items":[]},"Michoacán (Pescado)":{"fuente":"ninguna","items":[]}}};
+
 const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -214,30 +243,50 @@ const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+
 const PAL=["#0E7C86","#C2308A","#7B3FBF","#1479B8"];
 const colorOf=k=>{let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return PAL[h%PAL.length]};
 const mediaOf=b=>Array.isArray(b.media)?b.media:(b.videoUrl?[{tipo:"video",url:b.videoUrl,titulo:"Video de ensayo"}]:[]);
-const cuadroOf=b=>String(b.cuadro||"").replace(/\s+/g," ").trim()||"Sin cuadro";
 const MAX_VIDEO=100*1024*1024;
+const SAFE_FOTO=/^[a-f0-9]+\.jpg$/;
+const fotoOk=f=>SAFE_FOTO.test(f||"")||!!safe(f);
 
-let bailes=[],loaded=false,loadErr=false,txt="",user=null;
+/* "Perú (Tondero)" => cuadro "Perú", baile/subtipo "Tondero" */
+const parseCuadro=n=>{const s=String(n??"").replace(/\s+/g," ").trim();const m=s.match(/^(.+?)\s*\((.+)\)$/);return m?{padre:m[1].trim(),sub:m[2].trim()}:{padre:s,sub:""}};
+const padreOf=b=>parseCuadro(b.cuadro).padre||"Sin cuadro";
+const subOf=b=>String(b.subtipo||"").trim()||parseCuadro(b.cuadro).sub;
+
+/* Vestuario base (del Word y del Excel): sólo hombres */
+const BASE_VEST=[];
+for(const k of Object.keys(VEST_DATA.vest)){
+  const {padre,sub}=parseCuadro(k);
+  for(const it of VEST_DATA.vest[k].items)BASE_VEST.push({padre,baile:sub,genero:"h",nombre:it.n,foto:it.f||""});
+}
+
+let bailes=[],loaded=false,loadErr=false,txt="",user=null,vestDocs=[];
 
 /* ---------- Datos ---------- */
 onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),
   s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;loadErr=false;updateLists();render()},
   ()=>{loaded=true;loadErr=true;render()});
+onSnapshot(collection(db,"vestuario"),
+  s=>{vestDocs=s.docs.map(d=>({id:d.id,...d.data()}));render()},
+  ()=>{vestDocs=[];render()});
 onAuthStateChanged(auth,u=>{user=u;renderAdminBar();render()});
 
-function cuadros(){
+function padres(){
   const m=new Map();
-  for(const n of VEST_DATA.cuadros){const k=norm(n);m.set(k,{key:k,name:n,items:[]})}
-  for(const b of bailes){const n=cuadroOf(b),k=norm(n);if(!m.has(k))m.set(k,{key:k,name:n,items:[]});m.get(k).items.push(b)}
-  const out=[...m.values()];
-  out.forEach(c=>c.items.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es")));
+  const add=p=>{const k=norm(p);if(!m.has(k))m.set(k,{key:k,name:p,subs:new Set(),bailes:[]});return m.get(k)};
+  for(const n of VEST_DATA.cuadros){const {padre,sub}=parseCuadro(n);const c=add(padre);if(sub)c.subs.add(sub)}
+  for(const x of vestDocs){if(x.padre){const c=add(x.padre);if(x.baile)c.subs.add(x.baile)}}
+  for(const b of bailes){const c=add(padreOf(b));c.bailes.push(b);const s=subOf(b);if(s)c.subs.add(s)}
+  const out=[...m.values()].map(c=>({...c,subs:[...c.subs].sort((a,b)=>a.localeCompare(b,"es"))}));
+  out.forEach(c=>c.bailes.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es")));
   return out.sort((a,b)=>a.key==="sin cuadro"?1:b.key==="sin cuadro"?-1:a.name.localeCompare(b.name,"es"));
 }
 function updateLists(){
-  const uniq=f=>[...new Set(bailes.map(f).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es")).map(v=>`<option value="${esc(v)}">`).join("");
-  $("lCuadros").innerHTML=uniq(b=>b.cuadro&&String(b.cuadro).trim());
-  $("lPaises").innerHTML=uniq(b=>b.pais);
-  $("lRegiones").innerHTML=uniq(b=>b.region);
+  const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,"es")).map(v=>`<option value="${esc(v)}">`).join("");
+  const ps=padres();
+  $("lCuadros").innerHTML=uniq(ps.filter(p=>p.key!=="sin cuadro").map(p=>p.name));
+  $("lSubs").innerHTML=uniq(ps.flatMap(p=>p.subs));
+  $("lPaises").innerHTML=uniq(bailes.map(b=>b.pais));
+  $("lRegiones").innerHTML=uniq(bailes.map(b=>b.region));
 }
 
 /* ---------- Vistas ---------- */
@@ -245,8 +294,8 @@ const getRoute=()=>location.hash.replace(/^#\/?/,"").split("/").filter(Boolean).
 const plural=(n,s)=>`${n} ${s}${n===1?"":"s"}`;
 
 function rowHtml(b,showCuadro){
-  const c=cuadroOf(b),m=mediaOf(b),v=m.filter(x=>x.tipo==="video").length,f=m.length-v;
-  const meta=[showCuadro?c:"",b.pais,b.region].filter(Boolean).join(" · ");
+  const c=padreOf(b),m=mediaOf(b),v=m.filter(x=>x.tipo==="video").length,f=m.length-v;
+  const meta=[showCuadro?c:"",subOf(b),b.pais,b.region].filter(Boolean).join(" · ");
   const cnt=[v?plural(v,"video"):"",f?plural(f,"foto"):""].filter(Boolean).join(" · ")||"Sin videos ni fotos aún";
   return `<a class="row" style="--c:${colorOf(norm(c))}" href="#/b/${esc(b.id)}"><span><b>${esc(b.nombre)}</b><small>${esc(meta)}</small><small>${cnt}</small></span><span class="go" aria-hidden="true">›</span></a>`;
 }
@@ -254,49 +303,69 @@ function rowHtml(b,showCuadro){
 function homeView(){
   const q=norm(txt);
   if(q){
-    const f=bailes.filter(b=>norm([b.nombre,cuadroOf(b),b.pais,b.region].join(" ")).includes(q));
+    const f=bailes.filter(b=>norm([b.nombre,padreOf(b),subOf(b),b.pais,b.region].join(" ")).includes(q));
     return `<p class="kick" style="margin:18px 0 12px">${plural(f.length,"resultado")}</p>`+(f.length?f.map(b=>rowHtml(b,true)).join(""):`<div class="empty">Ningún baile coincide con tu búsqueda.</div>`);
   }
-  const cs=cuadros();
-  const hero=`<div class="hero"><span class="kick">Repertorio</span><h1>Nuestros cuadros</h1><p>Elige un cuadro para ver sus bailes, videos y letras.</p></div>`;
-  if(!cs.length)return hero+`<div class="empty">Aún no hay bailes. ${user?"Agrega el primero con el botón de arriba.":"El equipo los irá subiendo."}</div>`;
-  return hero+`<div class="grid">`+cs.map(c=>`<a class="card" style="--c:${colorOf(c.key)}" href="#/c/${encodeURIComponent(c.key)}"><span class="ini" aria-hidden="true">${esc(c.name.charAt(0).toUpperCase())}</span><h2>${esc(c.name)}</h2><small>${c.items.length?plural(c.items.length,"baile"):"Sin videos aún"}</small></a>`).join("")+`</div>`;
+  const hero=`<div class="hero"><span class="kick">Repertorio</span><h1>Nuestros cuadros</h1><p>Elige un cuadro para ver sus bailes, su vestuario, videos y letras.</p></div>`;
+  return hero+`<div class="grid">`+padres().map(c=>{
+    const t=[c.bailes.length?plural(c.bailes.length,"baile"):"Sin videos aún",c.subs.length?plural(c.subs.length,"subtipo"):""].filter(Boolean).join(" · ");
+    return `<a class="card" style="--c:${colorOf(c.key)}" href="#/c/${encodeURIComponent(c.key)}"><span class="ini" aria-hidden="true">${esc(c.name.charAt(0).toUpperCase())}</span><h2>${esc(c.name)}</h2><small>${esc(t)}</small></a>`;
+  }).join("")+`</div>`;
 }
 
 function tabsHtml(key,active,color){
   const k=encodeURIComponent(key);
   return `<nav class="tabs" style="--c:${color}" aria-label="Secciones del cuadro"><a href="#/c/${k}" ${active==="b"?'aria-current="page" class="on"':""}>Bailes</a><a href="#/c/${k}/v" ${active==="v"?'aria-current="page" class="on"':""}>Vestuario</a></nav>`;
 }
+const backHtml=`<a class="back" href="#/">← Todos los cuadros</a>`;
+
 function cuadroView(key){
-  const c=cuadros().find(x=>x.key===key);
-  const back=`<a class="back" href="#/">← Todos los cuadros</a>`;
-  if(!c)return back+`<div class="empty">Ese cuadro ya no existe.</div>`;
+  const c=padres().find(x=>x.key===key);
+  if(!c)return backHtml+`<div class="empty">Ese cuadro ya no existe.</div>`;
   const col=colorOf(c.key);
-  return back+`<div class="lhead" style="--c:${col}"><span class="kick">Cuadro · ${c.items.length?plural(c.items.length,"baile"):"sin videos aún"}</span><h1>${esc(c.name)}</h1></div>`+tabsHtml(key,"b",col)+(c.items.length?c.items.map(b=>rowHtml(b,false)).join(""):`<div class="empty">Este cuadro aún no tiene bailes con video. Revisa su pestaña Vestuario.</div>`);
-}
-const SAFE_FOTO=/^[a-f0-9]+\.jpg$/;
-function vestuarioView(key){
-  const name=VEST_DATA.cuadros.find(n=>norm(n)===key);
-  const back=`<a class="back" href="#/">← Todos los cuadros</a>`;
-  if(!name)return back+`<div class="empty">Ese cuadro ya no existe.</div>`;
-  const col=colorOf(key),v=VEST_DATA.vest[name]||{fuente:"ninguna",items:[]};
-  const aviso=v.fuente==="excel"?`<p class="hint" style="margin:14px 0 0">Lista de prendas tomada del repertorio. Las fotos se irán agregando.</p>`:"";
-  const grid=v.items.length
-    ?`<div class="vgrid">`+v.items.map(i=>`<figure>${SAFE_FOTO.test(i.f||"")?`<img loading="lazy" src="${esc(i.f)}" alt="${esc(i.n)}">`:`<div class="nofoto">Sin foto aún</div>`}<figcaption>${esc(i.n)}</figcaption></figure>`).join("")+`</div>`
-    :`<div class="empty">Vestuario pendiente de cargar.</div>`;
-  return back+`<div class="lhead" style="--c:${col}"><span class="kick">Cuadro · Vestuario</span><h1>${esc(name)}</h1></div>`+tabsHtml(key,"v",col)+aviso+grid;
+  const kick=["Cuadro",c.subs.length?c.subs.join(", "):""].filter(Boolean).join(" · ");
+  return backHtml+`<div class="lhead" style="--c:${col}"><span class="kick">${esc(kick)}</span><h1>${esc(c.name)}</h1></div>`+tabsHtml(key,"b",col)+(c.bailes.length?c.bailes.map(b=>rowHtml(b,false)).join(""):`<div class="empty">Este cuadro aún no tiene bailes con video. Revisa su pestaña Vestuario.</div>`);
 }
 
+/* ---------- Vestuario ---------- */
+function vestuarioView(key,g){
+  const c=padres().find(x=>x.key===key);
+  if(!c)return backHtml+`<div class="empty">Ese cuadro ya no existe.</div>`;
+  g=g==="m"?"m":"h";
+  const col=colorOf(c.key),k=encodeURIComponent(key);
+  const usingBase=vestDocs.length===0;
+  const src=usingBase?BASE_VEST:vestDocs;
+  const items=src.filter(x=>norm(x.padre)===c.key&&(x.genero||"h")===g);
+  const sub=`<nav class="tabs sub" style="--c:${col}" aria-label="Vestuario hombre o mujer"><a href="#/c/${k}/v/h" ${g==="h"?'aria-current="page" class="on"':""}>Vestuario hombre</a><a href="#/c/${k}/v/m" ${g==="m"?'aria-current="page" class="on"':""}>Vestuario mujer</a></nav>`;
+  let admin="";
+  if(user){
+    admin=`<div class="vtools"><button class="btn small acc" data-act="vnew" data-k="${esc(key)}" data-g="${g}">+ Agregar prenda</button></div>`;
+    if(usingBase)admin+=`<p class="hint" style="margin:10px 0 0">Este vestuario viene del Word y del Excel del conjunto. Para poder editarlo desde la app, guárdalo primero:</p><div class="vtools"><button class="btn small" data-act="vimport">Guardar vestuario base en la app</button></div>`;
+  }
+  const order=[""].concat(c.subs);
+  for(const x of items)if(!order.includes(x.baile||""))order.push(x.baile||"");
+  const groups=order.map(s=>({t:s,items:items.filter(x=>(x.baile||"")===s)})).filter(G=>G.items.length);
+  const fig=x=>`<figure>${fotoOk(x.foto)?`<img loading="lazy" src="${esc(x.foto)}" alt="${esc(x.nombre)}">`:`<div class="nofoto">Sin foto aún</div>`}<figcaption>${esc(x.nombre)}</figcaption>${user&&!usingBase&&x.id?`<div class="vact"><button class="btn small" data-act="vedit" data-id="${esc(x.id)}">Editar</button><button class="btn small danger" data-act="vdel" data-id="${esc(x.id)}">Eliminar</button></div>`:""}</figure>`;
+  let body="";
+  for(const G of groups){
+    const t=G.t||(c.subs.length?"Para todo el cuadro":"");
+    body+=(t?`<h3 class="vsub">${esc(t)}</h3>`:"")+`<div class="vgrid">${G.items.map(fig).join("")}</div>`;
+  }
+  if(!groups.length)body=`<div class="empty">${g==="m"?"Aún no hay prendas de mujer en este cuadro.":"Vestuario pendiente de cargar."}</div>`;
+  return backHtml+`<div class="lhead" style="--c:${col}"><span class="kick">Cuadro · Vestuario</span><h1>${esc(c.name)}</h1></div>`+tabsHtml(key,"v",col)+sub+admin+body;
+}
+
+/* ---------- Detalle de baile ---------- */
 function detailView(id){
   const b=bailes.find(x=>x.id===id);
-  if(!b)return `<a class="back" href="#/">← Todos los cuadros</a><div class="empty">No encontré ese baile.</div>`;
-  const c=cuadroOf(b),ck=norm(c),m=mediaOf(b);
+  if(!b)return backHtml+`<div class="empty">No encontré ese baile.</div>`;
+  const c=padreOf(b),ck=norm(c),s=subOf(b),m=mediaOf(b);
   const vids=m.filter(x=>x.tipo==="video"&&safe(x.url)),pics=m.filter(x=>x.tipo!=="video"&&safe(x.url));
   return `<a class="back" href="#/c/${encodeURIComponent(ck)}">← ${esc(c)}</a>
   <article class="det" style="--c:${colorOf(ck)}">
-    <span class="kick">Cuadro ${esc(c)}</span>
+    <span class="kick">Cuadro ${esc(c)}${s?" · "+esc(s):""}</span>
     <h1>${esc(b.nombre)}</h1>
-    <div class="chips">${b.pais?`<span class="chip"><b>País</b>${esc(b.pais)}</span>`:""}${b.region?`<span class="chip"><b>Región</b>${esc(b.region)}</span>`:""}</div>
+    <div class="chips">${s?`<span class="chip"><b>Baile</b>${esc(s)}</span>`:""}${b.pais?`<span class="chip"><b>País</b>${esc(b.pais)}</span>`:""}${b.region?`<span class="chip"><b>Región</b>${esc(b.region)}</span>`:""}</div>
     ${vids.length?`<section class="sec"><h3>Videos</h3>${vids.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video></div>`).join("")}</section>`:""}
     ${pics.length?`<section class="sec"><h3>Fotos</h3><div class="photos">${pics.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||b.nombre)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div></section>`:""}
     ${!vids.length&&!pics.length?`<p class="hint" style="margin-top:26px">Este baile aún no tiene videos ni fotos.</p>`:""}
@@ -307,11 +376,11 @@ function detailView(id){
 }
 
 function render(){
-  const [t,id]=getRoute();
+  const r=getRoute(),t=r[0],id=r[1];
   $("searchbox").hidden=!!t;
   if(!loaded){$("view").innerHTML=`<div class="empty">Cargando…</div>`;return}
   if(loadErr){$("view").innerHTML=`<div class="empty">No se pudo cargar el catálogo. Revisa tu conexión o la configuración de Firebase.</div>`;return}
-  $("view").innerHTML=t==="c"?(getRoute()[2]==="v"?vestuarioView(id):cuadroView(id)):t==="b"?detailView(id):homeView();
+  $("view").innerHTML=t==="c"?(r[2]==="v"?vestuarioView(id,r[3]):cuadroView(id)):t==="b"?detailView(id):homeView();
 }
 function renderAdminBar(){
   $("adminBar").innerHTML=user
@@ -339,6 +408,10 @@ document.addEventListener("click",e=>{
   else if(act==="new")openForm(null);
   else if(act==="edit")openForm(bailes.find(x=>x.id===a.dataset.id));
   else if(act==="del")deleteBaile(a.dataset.id);
+  else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g);
+  else if(act==="vedit"){const x=vestDocs.find(v=>v.id===a.dataset.id);if(x)openVest(x,norm(x.padre),x.genero)}
+  else if(act==="vdel")deleteVest(a.dataset.id);
+  else if(act==="vimport")importBase(a);
 });
 
 async function deleteBaile(id){
@@ -355,33 +428,7 @@ $("fLogin").onsubmit=async e=>{
   catch{$("loginMsg").textContent="Correo o contraseña incorrectos."}
 };
 
-/* ---------- Formulario de baile ---------- */
-let editId=null,fm=[];
-function openForm(b){
-  editId=b?b.id:null;
-  fm=b?mediaOf(b).map(x=>({tipo:x.tipo==="video"?"video":"image",url:x.url,titulo:x.titulo||""})):[];
-  $("fAdd").reset();
-  $("addTitle").textContent=b?"Editar baile":"Agregar baile";
-  if(b){$("nombre").value=b.nombre||"";$("cuadro").value=String(b.cuadro||"").trim();$("pais").value=b.pais||"";$("region").value=b.region||"";$("signif").value=b.significado||"";$("letra").value=b.letra||""}
-  $("addMsg").textContent="";$("prog").hidden=true;$("btnSave").disabled=false;
-  renderFm();$("dAdd").showModal();
-}
-function renderFm(){
-  $("mlist").innerHTML=fm.map((x,i)=>`<div class="mrow"><div class="th">${x.tipo==="video"?"VIDEO":`<img alt="" src="${esc(x.prev||safe(x.url))}">`}</div><input data-mt="${i}" value="${esc(x.titulo)}" placeholder="Título (opcional)" aria-label="Título del archivo ${i+1}"><button type="button" class="x" data-mrm="${i}" aria-label="Quitar archivo ${i+1}">✕</button></div>`).join("")||`<p class="hint">Aún no hay videos ni fotos.</p>`;
-}
-$("mlist").addEventListener("input",e=>{const i=e.target.dataset.mt;if(i!==undefined)fm[i].titulo=e.target.value});
-$("mlist").addEventListener("click",e=>{const i=e.target.closest("[data-mrm]")?.dataset.mrm;if(i!==undefined){fm.splice(+i,1);renderFm()}});
-$("files").onchange=e=>{
-  const msg=$("addMsg");msg.textContent="";
-  for(const f of e.target.files){
-    const tipo=f.type.startsWith("video")?"video":f.type.startsWith("image")?"image":null;
-    if(!tipo){msg.textContent=`"${f.name}" no es un video ni una foto.`;continue}
-    if(tipo==="video"&&f.size>MAX_VIDEO){msg.textContent=`"${f.name}" pesa más de 100 MB. Comprímelo antes de subirlo.`;continue}
-    fm.push({tipo,file:f,titulo:"",prev:tipo==="image"?URL.createObjectURL(f):""});
-  }
-  e.target.value="";renderFm();
-};
-
+/* ---------- Subida a Cloudinary ---------- */
 async function shrink(file){
   try{
     const bmp=await createImageBitmap(file);
@@ -404,6 +451,80 @@ function uploadFile(file,onProg){
   });
 }
 
+/* ---------- Formulario de prenda (vestuario) ---------- */
+let vEdit=null,vPadre=null,vFotoActual="";
+function openVest(x,padreKey,g){
+  const c=padres().find(p=>p.key===padreKey);if(!c)return;
+  vEdit=x?x.id:null;vPadre=c;vFotoActual=x?(x.foto||""):"";
+  $("fVest").reset();
+  $("vTitle").textContent=(x?"Editar prenda":"Agregar prenda")+" · "+c.name;
+  $("vAlc").innerHTML=`<option value="">Todo el cuadro</option>`+c.subs.map(s=>`<option value="${esc(s)}">Sólo ${esc(s)}</option>`).join("");
+  $("vNom").value=x?x.nombre:"";
+  $("vGen").value=(x?x.genero:g)==="m"?"m":"h";
+  $("vAlc").value=x?(x.baile||""):"";
+  $("vActual").textContent=vFotoActual?"Esta prenda ya tiene foto. Elige otra solo si quieres reemplazarla.":"Sin foto todavía.";
+  $("vMsg").textContent="";$("vProg").hidden=true;$("vSave").disabled=false;
+  $("dVest").showModal();
+}
+$("fVest").onsubmit=async e=>{
+  e.preventDefault();
+  const msg=$("vMsg"),btn=$("vSave");msg.textContent="";btn.disabled=true;
+  try{
+    let foto=vFotoActual;
+    const file=$("vFoto").files[0];
+    if(file){
+      if(!file.type.startsWith("image/"))throw new Error("el archivo debe ser una foto");
+      $("vProg").hidden=false;$("vProg").value=0;
+      const r=await uploadFile(await shrink(file),p=>{$("vProg").value=p});
+      foto=r.secure_url;
+    }
+    const data={padre:vPadre.name,baile:$("vAlc").value,genero:$("vGen").value,nombre:$("vNom").value.trim(),foto};
+    if(vEdit)await updateDoc(doc(db,"vestuario",vEdit),data);
+    else await addDoc(collection(db,"vestuario"),data);
+    $("dVest").close();
+  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  finally{btn.disabled=false;$("vProg").hidden=true}
+};
+async function deleteVest(id){
+  const x=vestDocs.find(v=>v.id===id);if(!x)return;
+  if(!confirm(`¿Eliminar la prenda "${x.nombre}"?`))return;
+  try{await deleteDoc(doc(db,"vestuario",id))}catch(err){alert("No se pudo eliminar: "+err.message)}
+}
+async function importBase(btn){
+  if(!confirm(`Se guardarán ${BASE_VEST.length} prendas del vestuario base en la app para que puedas editarlas. ¿Continuar?`))return;
+  btn.disabled=true;btn.textContent="Guardando…";
+  try{
+    await Promise.all(BASE_VEST.map(x=>addDoc(collection(db,"vestuario"),{padre:x.padre,baile:x.baile,genero:x.genero,nombre:x.nombre,foto:x.foto})));
+  }catch(err){alert("No se pudo guardar: "+err.message);btn.disabled=false;btn.textContent="Guardar vestuario base en la app"}
+}
+
+/* ---------- Formulario de baile ---------- */
+let editId=null,fm=[];
+function openForm(b){
+  editId=b?b.id:null;
+  fm=b?mediaOf(b).map(x=>({tipo:x.tipo==="video"?"video":"image",url:x.url,titulo:x.titulo||""})):[];
+  $("fAdd").reset();
+  $("addTitle").textContent=b?"Editar baile":"Agregar baile";
+  if(b){$("nombre").value=b.nombre||"";$("cuadro").value=padreOf(b)==="Sin cuadro"?"":padreOf(b);$("subtipo").value=subOf(b);$("pais").value=b.pais||"";$("region").value=b.region||"";$("signif").value=b.significado||"";$("letra").value=b.letra||""}
+  $("addMsg").textContent="";$("prog").hidden=true;$("btnSave").disabled=false;
+  renderFm();$("dAdd").showModal();
+}
+function renderFm(){
+  $("mlist").innerHTML=fm.map((x,i)=>`<div class="mrow"><div class="th">${x.tipo==="video"?"VIDEO":`<img alt="" src="${esc(x.prev||safe(x.url))}">`}</div><input data-mt="${i}" value="${esc(x.titulo)}" placeholder="Título (opcional)" aria-label="Título del archivo ${i+1}"><button type="button" class="x" data-mrm="${i}" aria-label="Quitar archivo ${i+1}">✕</button></div>`).join("")||`<p class="hint">Aún no hay videos ni fotos.</p>`;
+}
+$("mlist").addEventListener("input",e=>{const i=e.target.dataset.mt;if(i!==undefined)fm[i].titulo=e.target.value});
+$("mlist").addEventListener("click",e=>{const i=e.target.closest("[data-mrm]")?.dataset.mrm;if(i!==undefined){fm.splice(+i,1);renderFm()}});
+$("files").onchange=e=>{
+  const msg=$("addMsg");msg.textContent="";
+  for(const f of e.target.files){
+    const tipo=f.type.startsWith("video")?"video":f.type.startsWith("image")?"image":null;
+    if(!tipo){msg.textContent=`"${f.name}" no es un video ni una foto.`;continue}
+    if(tipo==="video"&&f.size>MAX_VIDEO){msg.textContent=`"${f.name}" pesa más de 100 MB. Comprímelo antes de subirlo.`;continue}
+    fm.push({tipo,file:f,titulo:"",prev:tipo==="image"?URL.createObjectURL(f):""});
+  }
+  e.target.value="";renderFm();
+};
+
 $("fAdd").onsubmit=async e=>{
   e.preventDefault();
   const msg=$("addMsg"),btn=$("btnSave");msg.textContent="";btn.disabled=true;
@@ -418,8 +539,9 @@ $("fAdd").onsubmit=async e=>{
       x.url=r.secure_url;x.tipo=r.resource_type==="video"?"video":"image";delete x.file;delete x.prev;
     }
     msg.style.color="";msg.textContent="";
+    const pc=parseCuadro($("cuadro").value);
     const data={
-      nombre:$("nombre").value.trim(),cuadro:$("cuadro").value.trim(),pais:$("pais").value.trim(),region:$("region").value.trim(),
+      nombre:$("nombre").value.trim(),cuadro:pc.padre,subtipo:$("subtipo").value.trim()||pc.sub,pais:$("pais").value.trim(),region:$("region").value.trim(),
       significado:$("signif").value.trim(),letra:$("letra").value.trim(),
       media:fm.map(x=>({tipo:x.tipo,url:x.url,titulo:(x.titulo||"").trim()}))
     };
