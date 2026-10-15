@@ -212,8 +212,10 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="1.3.0";
+const APP_VERSION="1.3.1";
 const CHANGELOG=[
+  {v:"1.3.1",fecha:"15 de octubre de 2026",items:[
+    "Los estados de México (Jalisco, Veracruz, Yucatán, Sonora, Tabasco, Tamaulipas y Michoacán) ahora están dentro del cuadro México."]},
   {v:"1.3.0",fecha:"14 de octubre de 2026",items:[
     "Los cuadros ahora agrupan sus bailes: por ejemplo, el cuadro Perú incluye Tondero, Huaylarsh, Marineras y Vals.",
     "El vestuario se separa en vestuario hombre y vestuario mujer.",
@@ -248,7 +250,14 @@ const SAFE_FOTO=/^[a-f0-9]+\.jpg$/;
 const fotoOk=f=>SAFE_FOTO.test(f||"")||!!safe(f);
 
 /* "Perú (Tondero)" => cuadro "Perú", baile/subtipo "Tondero" */
-const parseCuadro=n=>{const s=String(n??"").replace(/\s+/g," ").trim();const m=s.match(/^(.+?)\s*\((.+)\)$/);return m?{padre:m[1].trim(),sub:m[2].trim()}:{padre:s,sub:""}};
+const MX=new Set(["jalisco","veracruz","yucatan","sonora","tabasco","tamaulipas","michoacan"]);
+const parseCuadro=n=>{
+  const s=String(n??"").replace(/\s+/g," ").trim();const m=s.match(/^(.+?)\s*\((.+)\)$/);
+  let r=m?{padre:m[1].trim(),sub:m[2].trim()}:{padre:s,sub:""};
+  if(MX.has(norm(r.padre)))r={padre:"México",sub:r.sub?`${r.padre} (${r.sub})`:r.padre};
+  return r;
+};
+const normVest=x=>{const r=parseCuadro(x.padre+(x.baile?` (${x.baile})`:""));return {...x,padre:r.padre,baile:r.sub}};
 const padreOf=b=>parseCuadro(b.cuadro).padre||"Sin cuadro";
 const subOf=b=>String(b.subtipo||"").trim()||parseCuadro(b.cuadro).sub;
 
@@ -266,7 +275,7 @@ onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),
   s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;loadErr=false;updateLists();render()},
   ()=>{loaded=true;loadErr=true;render()});
 onSnapshot(collection(db,"vestuario"),
-  s=>{vestDocs=s.docs.map(d=>({id:d.id,...d.data()}));render()},
+  s=>{vestDocs=s.docs.map(d=>normVest({id:d.id,...d.data()}));render()},
   ()=>{vestDocs=[];render()});
 onAuthStateChanged(auth,u=>{user=u;renderAdminBar();render()});
 
