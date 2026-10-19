@@ -272,12 +272,33 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
     <div><label for="vGen">Vestuario de</label><select id="vGen"><option value="h">Hombre</option><option value="m">Mujer</option></select></div>
     <div><label for="vAlc">Se usa en</label><select id="vAlc"></select></div>
   </div>
+  <div id="vNuevoBox" hidden><label for="vNuevo">Nombre del baile nuevo</label><input id="vNuevo" placeholder="Ej: Sanjuanito"></div>
+  <label for="vVar">Variante de vestuario (opcional)</label><input id="vVar" list="lVars" placeholder="Ej: Cacique"><datalist id="lVars"></datalist>
+  <p class="hint">Úsala cuando un mismo baile tiene varios trajes (ej. Tobas: Cacique, Guerreros, Izozog).</p>
   <label for="vParte">Parte del cuerpo</label><select id="vParte"><option value="">Automática (según el nombre)</option><option value="cabeza">Cabeza (sombrero, careta…)</option><option value="cuello">Cuello (pañuelo, corbatín…)</option><option value="torso">Torso (camisa, chaqueta…)</option><option value="cintura">Cintura (faja, cinturón…)</option><option value="mano">Mano o accesorio (bastón, bolso…)</option><option value="piernas">Piernas (pantalón, falda…)</option><option value="pies">Pies (zapatos, botas…)</option><option value="ejemplo">Foto de ejemplo (traje completo)</option></select>
   <label for="vFoto">Foto (opcional)</label><input id="vFoto" type="file" accept="image/*">
   <p class="hint" id="vActual"></p>
   <progress id="vProg" max="100" value="0" hidden></progress>
   <div class="msg" id="vMsg" role="alert"></div>
   <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="vSave">Guardar prenda</button></div>
+</form></dialog>
+
+<dialog id="dCuadro"><form class="dlg" id="fCuadro">
+  <h2>Editar cuadro y baile</h2>
+  <p class="hint" id="cHint"></p>
+  <label for="cPadre">Cuadro</label><input id="cPadre" list="lCuadros" required>
+  <label for="cSub">Baile</label><input id="cSub" list="lSubs" placeholder="Ej: Tobas">
+  <div id="cVarBox"><label for="cVar">Variante de vestuario (opcional)</label><input id="cVar" placeholder="Ej: Cacique"></div>
+  <p class="hint">El baile es el que sale en la lista. Las variantes son los distintos trajes de un mismo baile (ej. Tobas: Cacique, Guerreros, Izozog).</p>
+  <div class="two">
+    <div><label for="cP">Aparece en el mapa en</label><select id="cP"></select></div>
+    <div><label for="cZ">Zona</label><select id="cZ"></select></div>
+  </div>
+  <div class="msg" id="cMsg" role="alert"></div>
+  <div class="acts" style="justify-content:space-between">
+    <span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small danger" id="cDel">Quitar este baile</button><button type="button" class="btn small danger" id="cDelAll">Quitar todo el cuadro</button></span>
+    <span style="display:flex;gap:8px"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="cSave">Guardar</button></span>
+  </div>
 </form></dialog>
 
 <dialog id="dFlag"><div class="dlg" style="text-align:center"><div id="flagBig" style="font-size:7rem;line-height:1.1" aria-hidden="true"></div><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
@@ -293,14 +314,18 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getFirestore,collection,addDoc,updateDoc,deleteDoc,setDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.1.0";
+const APP_VERSION="2.2.0";
 const CHANGELOG=[
+  {v:"2.2.0",fecha:"19 de octubre de 2026",items:[
+    "Al agregar una prenda se puede elegir un baile nuevo del cuadro (por ejemplo, un baile solo de Ecuador).",
+    "Los administradores pueden editar y quitar cuadros y bailes desde la página del baile (botón Editar cuadro).",
+    "Un baile puede tener variantes de vestuario. Tobas ahora es un solo baile del cuadro Bolivia, con las variantes Cacique, Guerreros e Izozog."]},
   {v:"2.1.0",fecha:"19 de octubre de 2026",items:[
     "México ahora se organiza por estados: el mapa muestra los estados con bailes (Jalisco, Veracruz, Yucatán, Sonora, Tabasco, Tamaulipas y Michoacán) y cada uno tiene su lista."]},
   {v:"2.0.0",fecha:"17 de octubre de 2026",items:[
@@ -355,37 +380,52 @@ const parseCuadro=n=>{
   if(MX.has(norm(r.padre)))r={padre:"México",sub:r.sub?`${r.padre} (${r.sub})`:r.padre};
   return r;
 };
-const normVest=x=>{const r=parseCuadro(x.padre+(x.baile?` (${x.baile})`:""));return {...x,padre:r.padre,baile:r.sub}};
+/* Ajustes al repertorio: renombrar, mover u ocultar cuadros y bailes */
+const STATIC_FIX={
+  "tobas|cacique":{padre:"Bolivia",sub:"Tobas",variante:"Cacique",pk:"bolivia"},
+  "tobas|guerreros":{padre:"Bolivia",sub:"Tobas",variante:"Guerreros",pk:"bolivia"},
+  "tobas|izozog":{padre:"Bolivia",sub:"Tobas",variante:"Izozog",pk:"bolivia"}
+};
+let OVR=new Map(),vestRaw=[];
+const okey=(p,s)=>norm(p)+"|"+norm(s);
+function remap(padre,sub){
+  const k=okey(padre,sub),o=OVR.get(k)||STATIC_FIX[k];
+  if(!o)return {padre,sub,variante:"",pk:"",zk:"",deleted:false,ok:k};
+  return {padre:o.padre||padre,sub:o.sub==null?sub:o.sub,variante:o.variante||"",pk:o.pk||"",zk:o.zk||"",deleted:!!o.deleted,ok:k};
+}
+const normVest=x=>{const r=parseCuadro(x.padre+(x.baile?` (${x.baile})`:""));const m=remap(r.padre,r.sub);return {...x,padre:m.padre,baile:m.sub,variante:x.variante||m.variante,_del:m.deleted}};
 const padreOf=b=>parseCuadro(b.cuadro).padre||"Sin cuadro";
 const subOf=b=>String(b.subtipo||"").trim()||parseCuadro(b.cuadro).sub;
 
 /* Vestuario base (del Word y del Excel): sólo hombres */
-const BASE_VEST=[];
-for(const k of Object.keys(VEST_DATA.vest)){
-  const {padre,sub}=parseCuadro(k);
-  for(const it of VEST_DATA.vest[k].items)BASE_VEST.push({padre,baile:sub,genero:"h",nombre:it.n,foto:it.f||""});
-}
+const baseVest=()=>{
+  const out=[];
+  for(const k of Object.keys(VEST_DATA.vest)){
+    const r=parseCuadro(k),m=remap(r.padre,r.sub);if(m.deleted)continue;
+    for(const it of VEST_DATA.vest[k].items)out.push({padre:m.padre,baile:m.sub,variante:m.variante,genero:"h",nombre:it.n,foto:it.f||""});
+  }
+  return out;
+};
 
 let bailes=[],loaded=false,loadErr=false,txt="",user=null,vestDocs=[];
+const rebuildVest=()=>{vestDocs=vestRaw.map(normVest).filter(x=>!x._del)};
 
 /* ---------- Datos ---------- */
 onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),
   s=>{bailes=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;loadErr=false;updateLists();render()},
   ()=>{loaded=true;loadErr=true;render()});
 onSnapshot(collection(db,"vestuario"),
-  s=>{vestDocs=s.docs.map(d=>normVest({id:d.id,...d.data()}));render()},
-  ()=>{vestDocs=[];render()});
+  s=>{vestRaw=s.docs.map(d=>({id:d.id,...d.data()}));rebuildVest();render()},
+  ()=>{vestRaw=[];vestDocs=[];render()});
+onSnapshot(collection(db,"cuadros"),
+  s=>{OVR=new Map(s.docs.map(d=>[d.data().key,d.data()]));rebuildVest();updateLists();render()},
+  ()=>{});
 onAuthStateChanged(auth,u=>{user=u;renderAdminBar();render()});
 
 function padres(){
   const m=new Map();
-  const add=p=>{const k=norm(p);if(!m.has(k))m.set(k,{key:k,name:p,subs:new Set(),bailes:[]});return m.get(k)};
-  for(const n of VEST_DATA.cuadros){const {padre,sub}=parseCuadro(n);const c=add(padre);if(sub)c.subs.add(sub)}
-  for(const x of vestDocs){if(x.padre){const c=add(x.padre);if(x.baile)c.subs.add(x.baile)}}
-  for(const b of bailes){const c=add(padreOf(b));c.bailes.push(b);const s=subOf(b);if(s)c.subs.add(s)}
-  const out=[...m.values()].map(c=>({...c,subs:[...c.subs].sort((a,b)=>a.localeCompare(b,"es"))}));
-  out.forEach(c=>c.bailes.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es")));
-  return out.sort((a,b)=>a.key==="sin cuadro"?1:b.key==="sin cuadro"?-1:a.name.localeCompare(b.name,"es"));
+  for(const e of entries()){const k=norm(e.padre);if(!m.has(k))m.set(k,{key:k,name:e.padre,subs:new Set()});if(e.sub)m.get(k).subs.add(e.sub)}
+  return [...m.values()].map(c=>({...c,subs:[...c.subs].sort((a,b)=>a.localeCompare(b,"es"))})).sort((a,b)=>a.name.localeCompare(b.name,"es"));
 }
 function updateLists(){
   const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,"es")).map(v=>`<option value="${esc(v)}">`).join("");
@@ -438,11 +478,21 @@ function placeOf(padre,doc,sub){
   return {pk,zk};
 }
 function entries(){
-  const out=[],cov=new Set(),seen=new Set();
-  for(const b of bailes){const padre=padreOf(b),sub=subOf(b);out.push({id:b.id,nombre:b.nombre,padre,sub,doc:b,...placeOf(padre,b,sub)});cov.add(norm(padre)+"|"+norm(sub))}
-  const add=(padre,sub)=>{const k=norm(padre)+"|"+norm(sub);if(cov.has(k)||seen.has(k))return;seen.add(k);out.push({id:"x~"+padre+"~"+sub,nombre:sub||padre,padre,sub,doc:null,...placeOf(padre,null,sub)})};
-  for(const n of VEST_DATA.cuadros){const r=parseCuadro(n);add(r.padre,r.sub)}
-  for(const x of vestDocs)if(x.padre&&x.baile)add(x.padre,x.baile);
+  const out=[],byK=new Map();
+  const push=(e,k)=>{out.push(e);byK.set(k,e)};
+  for(const b of bailes){
+    const m=remap(padreOf(b),subOf(b));if(m.deleted)continue;
+    const k=okey(m.padre,m.sub),ex=byK.get(k);
+    if(ex&&!ex.doc){ex.doc=b;ex.id=b.id;ex.nombre=b.nombre;ex.oks.push(m.ok);continue}
+    push({id:b.id,nombre:b.nombre,padre:m.padre,sub:m.sub,doc:b,oks:[m.ok],...(m.pk?{pk:m.pk,zk:m.zk}:placeOf(m.padre,b,m.sub))},k);
+  }
+  const add=(padre,sub,ok,m)=>{
+    const k=okey(padre,sub),ex=byK.get(k);
+    if(ex){if(!ex.oks.includes(ok))ex.oks.push(ok);return}
+    push({id:"x~"+padre+"~"+sub,nombre:sub||padre,padre,sub,doc:null,oks:[ok],...(m&&m.pk?{pk:m.pk,zk:m.zk}:placeOf(padre,null,sub))},k);
+  };
+  for(const n of VEST_DATA.cuadros){const r=parseCuadro(n),m=remap(r.padre,r.sub);if(!m.deleted)add(m.padre,m.sub,m.ok,m)}
+  for(const x of vestDocs)if(x.padre&&x.baile)add(x.padre,x.baile,okey(x.padre,x.baile));
   return out;
 }
 const byName=(a,b)=>String(a.nombre).localeCompare(String(b.nombre),"es");
@@ -627,7 +677,7 @@ function detailView(e){
     <div class="chips">${chips.map(c=>`<span class="chip"><b>${c[0]}</b>${esc(c[1])}</span>`).join("")}</div>
     ${b.significado?`<section class="sec"><h3>Descripción</h3><div class="text">${esc(b.significado)}</div></section>`:""}
     ${body||`<p class="hint" style="margin-top:26px">Este baile aún no tiene videos ni fotos.</p>`}
-    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}</div>`:""}
+    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}<button class="btn small" data-act="ecuadro" data-id="${esc(e.id)}">Editar cuadro</button></div>`:""}
   </article>`;
 }
 
@@ -643,26 +693,36 @@ const SIL={
   m:`<circle cx="50" cy="20" r="12"/><path d="M44 31h12v8H44z"/><path d="M34 38Q50 34 66 38L69 80Q50 86 31 80Z"/><path d="M34 40L22 88L28 90L38 56Z"/><path d="M66 40L78 88L72 90L62 56Z"/><path d="M31 80Q50 86 69 80L94 196Q50 206 6 196Z"/><rect x="38" y="196" width="9" height="32" rx="4"/><rect x="53" y="196" width="9" height="32" rx="4"/>`,
   h:`<circle cx="50" cy="20" r="12"/><path d="M44 31h12v8H44z"/><path d="M30 38Q50 33 70 38L67 104L33 104Z"/><path d="M30 40L18 104L26 106L35 58Z"/><path d="M70 40L82 104L74 106L65 58Z"/><path d="M33 104L67 104L63 228L52 228L50 128L48 228L37 228Z"/>`
 };
-function vestView(e,g){
+function knownVars(e,src){
+  const s=new Set(),same=(p,b)=>norm(p)===norm(e.padre)&&norm(b)===norm(e.sub);
+  for(const n of VEST_DATA.cuadros){const r=parseCuadro(n),m=remap(r.padre,r.sub);if(!m.deleted&&m.variante&&same(m.padre,m.sub))s.add(m.variante)}
+  for(const o of OVR.values())if(!o.deleted&&o.variante&&same(o.padre,o.sub))s.add(o.variante);
+  for(const x of src)if(x.variante&&norm(x.padre)===norm(e.padre)&&(!x.baile||same(x.padre,x.baile)))s.add(x.variante);
+  return [...s].sort((a,b)=>a.localeCompare(b,"es"));
+}
+function vestView(e,g,vsel){
   g=g==="m"?"m":"h";
-  const k=encodeURIComponent(e.id),usingBase=vestDocs.length===0,src=usingBase?BASE_VEST:vestDocs;
-  const all=src.filter(x=>norm(x.padre)===norm(e.padre)&&(!x.baile||norm(x.baile)===norm(e.sub))&&(x.genero||"h")===g);
+  const k=encodeURIComponent(e.id),usingBase=vestRaw.length===0,src=usingBase?baseVest():vestDocs;
+  const vars=knownVars(e,src),selV=vars.find(v=>norm(v)===norm(vsel))||vars[0]||"";
+  const all=src.filter(x=>norm(x.padre)===norm(e.padre)&&(!x.baile||norm(x.baile)===norm(e.sub))&&(x.genero||"h")===g&&(!x.variante||norm(x.variante)===norm(selV)));
   const ej=all.filter(x=>x.parte==="ejemplo");
   const pr=all.filter(x=>x.parte!=="ejemplo").map(x=>({...x,_p:partOf(x)})).sort((a,b)=>PARTS[a._p]-PARTS[b._p]);
   const act=x=>user&&!usingBase&&x.id?`<span class="vact"><button class="btn small" data-act="vedit" data-id="${esc(x.id)}">Editar</button><button class="btn small danger" data-act="vdel" data-id="${esc(x.id)}">Eliminar</button></span>`:"";
   const PL={cabeza:"Cabeza",cuello:"Cuello",torso:"Torso",cintura:"Cintura",mano:"Accesorios",piernas:"Piernas",pies:"Pies"};
   const th=x=>fotoOk(x.foto)?`<button type="button" class="vth" data-zoom="${esc(x.foto)}" data-cap="${esc(x.nombre)}"><img loading="lazy" src="${esc(x.foto)}" alt="${esc(x.nombre)}"></button>`:`<span class="vth no">Sin foto</span>`;
-  const rows=Object.keys(PARTS).map(p=>({p,items:pr.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi">${th(x)}<span class="vn"><b>${esc(x.nombre)}</b>${x.baile?`<small>Solo ${esc(x.baile)}</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
-  const gb=(gg,label,ic)=>`<a class="gbtn${g===gg?" on":""}" href="#/b/${k}/v/${gg}" aria-label="${label}" ${g===gg?'aria-current="page"':""}>${ic}</a>`;
+  const rows=Object.keys(PARTS).map(p=>({p,items:pr.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi">${th(x)}<span class="vn"><b>${esc(x.nombre)}</b>${!x.baile&&e.sub?`<small>Todo el cuadro</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
+  const vq=selV?"/"+encodeURIComponent(selV):"";
+  const gb=(gg,label,ic)=>`<a class="gbtn${g===gg?" on":""}" href="#/b/${k}/v/${gg}${vq}" aria-label="${label}" ${g===gg?'aria-current="page"':""}>${ic}</a>`;
   let admin="";
   if(user){
-    admin=`<div class="vtools"><button class="btn small acc" data-act="vnew" data-k="${esc(norm(e.padre))}" data-g="${g}" data-s="${esc(e.sub)}">+ Agregar prenda</button></div>`;
+    admin=`<div class="vtools"><button class="btn small acc" data-act="vnew" data-k="${esc(norm(e.padre))}" data-g="${g}" data-s="${esc(e.sub)}" data-v="${esc(selV)}">+ Agregar prenda</button></div>`;
     if(usingBase)admin+=`<p class="hint" style="margin:10px 0 0">Este vestuario viene del Word y del Excel del conjunto. Para poder editarlo desde la app, guárdalo primero:</p><div class="vtools"><button class="btn small" data-act="vimport">Guardar vestuario base en la app</button></div>`;
   }
   const exH=ej.length||user?`<h3 class="vsub">Fotos ejemplo</h3>`+(ej.length?`<div class="vgrid">${ej.map(x=>`<figure>${fotoOk(x.foto)?`<img loading="lazy" src="${esc(x.foto)}" alt="${esc(x.nombre)}" data-zoom="${esc(x.foto)}" data-cap="${esc(x.nombre)}">`:`<div class="nofoto">Sin foto aún</div>`}<figcaption>${esc(x.nombre)}</figcaption>${act(x)?`<div class="vact" style="padding:0 12px 12px">${act(x)}</div>`:""}</figure>`).join("")}</div>`:`<p class="hint">Todavía no hay fotos de ejemplo. Agrégalas con "+ Agregar prenda" eligiendo "Foto de ejemplo".</p>`):"";
   return `<div class="dhead"><a class="back" href="#/b/${k}">← ${esc(e.nombre)}</a></div>
   <h1 class="vh">Vestuario <span>${esc(e.nombre)}</span></h1>
   <div class="gsel"><div class="gl"><span>Mujer</span>${gb("m","Vestuario de mujer","♀")}</div><div class="gl"><span>Hombre</span>${gb("h","Vestuario de hombre","♂")}</div></div>
+  ${vars.length?`<nav class="tabs sub" style="--c:var(--teal)" aria-label="Variantes de vestuario">${vars.map(v=>`<a href="#/b/${k}/v/${g}/${encodeURIComponent(v)}" ${v===selV?'aria-current="page" class="on"':""}>${esc(v)}</a>`).join("")}</nav>`:""}
   ${admin}
   ${pr.length?`<div class="vfig" id="vfig" data-g="${g}"><div class="vfl"><svg class="sil" viewBox="0 0 100 240" aria-hidden="true">${SIL[g]}</svg></div><div class="vfr">${rows}</div><svg class="vlines" id="vlines" aria-hidden="true"></svg></div>`:`<div class="empty">${g==="m"?"Aún no hay prendas de mujer para este baile.":"Vestuario pendiente de cargar."}</div>`}
   ${exH}`;
@@ -693,7 +753,7 @@ function render(){
   if(t==="p")html=placeView(r[1],r[2]==="z"?r[3]:"");
   else if(t==="b"){
     const e=ENT.find(x=>x.id===r[1]);
-    html=!e?`<a class="back" href="#/">← Países</a><div class="empty">No encontré ese baile.</div>`:r[2]==="v"?vestView(e,r[3]):detailView(e);
+    html=!e?`<a class="back" href="#/">← Países</a><div class="empty">No encontré ese baile.</div>`:r[2]==="v"?vestView(e,r[3],r[4]):detailView(e);
   }else html=homeView();
   $("view").innerHTML=html;
   if(pendingMap&&$("mapbox"))mapState(pendingMap);else lastKey=null;
@@ -728,7 +788,8 @@ document.addEventListener("click",e=>{
   else if(act==="del")deleteBaile(a.dataset.id);
   else if(act==="newph"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openForm(null,{nombre:e.nombre,cuadro:e.padre,subtipo:e.sub,pais:e.pk?PAISES[e.pk][0]:"",region:zoneName(e)})}
   else if(act==="flag"){const P=PAISES[a.dataset.pk];if(P){$("flagBig").textContent=flagOf(P[1]);$("flagName").textContent=P[0];$("dFlag").showModal()}}
-  else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g,a.dataset.s);
+  else if(act==="ecuadro"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openCuadro(e)}
+  else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g,a.dataset.s,a.dataset.v);
   else if(act==="vedit"){const x=vestDocs.find(v=>v.id===a.dataset.id);if(x)openVest(x,norm(x.padre),x.genero)}
   else if(act==="vdel")deleteVest(a.dataset.id);
   else if(act==="vimport")importBase(a);
@@ -773,16 +834,19 @@ function uploadFile(file,onProg){
 
 /* ---------- Formulario de prenda (vestuario) ---------- */
 let vEdit=null,vPadre=null,vFotoActual="";
-function openVest(x,padreKey,g,sub){
+function openVest(x,padreKey,g,sub,vari){
   const c=padres().find(p=>p.key===padreKey);if(!c)return;
   vEdit=x?x.id:null;vPadre=c;vFotoActual=x?(x.foto||""):"";
   $("fVest").reset();
   $("vTitle").textContent=(x?"Editar prenda":"Agregar prenda")+" · "+c.name;
-  $("vAlc").innerHTML=`<option value="">Todo el cuadro</option>`+c.subs.map(s=>`<option value="${esc(s)}">Sólo ${esc(s)}</option>`).join("");
+  $("vAlc").innerHTML=`<option value="">Todo el cuadro</option>`+c.subs.map(s=>`<option value="${esc(s)}">Sólo ${esc(s)}</option>`).join("")+`<option value="__new">➕ Un baile nuevo de este cuadro…</option>`;
+  $("vNuevoBox").hidden=true;
+  $("lVars").innerHTML=[...new Set(vestDocs.filter(v=>norm(v.padre)===c.key&&v.variante).map(v=>v.variante))].map(v=>`<option value="${esc(v)}">`).join("");
   $("vNom").value=x?x.nombre:"";
   $("vGen").value=(x?x.genero:g)==="m"?"m":"h";
   $("vAlc").value=x?(x.baile||""):(c.subs.includes(sub)?sub:"");
   $("vParte").value=x?(x.parte||""):"";
+  $("vVar").value=x?(x.variante||""):(vari||"");
   $("vActual").textContent=vFotoActual?"Esta prenda ya tiene foto. Elige otra solo si quieres reemplazarla.":"Sin foto todavía.";
   $("vMsg").textContent="";$("vProg").hidden=true;$("vSave").disabled=false;
   $("dVest").showModal();
@@ -799,7 +863,9 @@ $("fVest").onsubmit=async e=>{
       const r=await uploadFile(await shrink(file),p=>{$("vProg").value=p});
       foto=r.secure_url;
     }
-    const data={padre:vPadre.name,baile:$("vAlc").value,genero:$("vGen").value,nombre:$("vNom").value.trim(),parte:$("vParte").value,foto};
+    let baile=$("vAlc").value;
+    if(baile==="__new"){baile=$("vNuevo").value.trim();if(!baile)throw new Error("escribe el nombre del baile nuevo")}
+    const data={padre:vPadre.name,baile,variante:$("vVar").value.trim(),genero:$("vGen").value,nombre:$("vNom").value.trim(),parte:$("vParte").value,foto};
     if(vEdit)await updateDoc(doc(db,"vestuario",vEdit),data);
     else await addDoc(collection(db,"vestuario"),data);
     $("dVest").close();
@@ -811,13 +877,54 @@ async function deleteVest(id){
   if(!confirm(`¿Eliminar la prenda "${x.nombre}"?`))return;
   try{await deleteDoc(doc(db,"vestuario",id))}catch(err){alert("No se pudo eliminar: "+err.message)}
 }
+$("vAlc").onchange=()=>{$("vNuevoBox").hidden=$("vAlc").value!=="__new"};
 async function importBase(btn){
+  const BASE_VEST=baseVest();
   if(!confirm(`Se guardarán ${BASE_VEST.length} prendas del vestuario base en la app para que puedas editarlas. ¿Continuar?`))return;
   btn.disabled=true;btn.textContent="Guardando…";
   try{
-    await Promise.all(BASE_VEST.map(x=>addDoc(collection(db,"vestuario"),{padre:x.padre,baile:x.baile,genero:x.genero,nombre:x.nombre,foto:x.foto,parte:""})));
+    await Promise.all(BASE_VEST.map(x=>addDoc(collection(db,"vestuario"),{padre:x.padre,baile:x.baile,genero:x.genero,nombre:x.nombre,foto:x.foto,parte:"",variante:x.variante||""})));
   }catch(err){alert("No se pudo guardar: "+err.message);btn.disabled=false;btn.textContent="Guardar vestuario base en la app"}
 }
+
+/* ---------- Editar / quitar cuadros y bailes ---------- */
+let cEnt=null;
+const optsPais=`<option value="">Automática (según el cuadro)</option>`+PKEYS.map(k=>`<option value="${k}">${esc(PAISES[k][0])}</option>`).join("");
+function fillCZ(){const p=$("cP").value,Z=ZONAS[p];$("cZ").innerHTML=`<option value="">${p?(Z?"Sin zona":"—"):"Automática"}</option>`+(Z?Z.map(z=>`<option value="${z.k}">${esc(z.n)}</option>`).join(""):"");$("cZ").disabled=!p||!Z}
+$("cP").innerHTML=optsPais;$("cP").onchange=fillCZ;
+function openCuadro(e){
+  cEnt=e;$("fCuadro").reset();$("cMsg").textContent="";$("cSave").disabled=false;
+  $("cHint").textContent=`Ahora: cuadro «${e.padre}»${e.sub?` · baile «${e.sub}»`:""}.`;
+  const o=OVR.get(e.oks[0])||STATIC_FIX[e.oks[0]]||{};
+  $("cPadre").value=e.padre;$("cSub").value=e.sub;
+  $("cVar").value=e.oks.length>1?"":(o.variante||"");
+  $("cVarBox").hidden=e.oks.length>1;
+  $("cP").value=o.pk||(e.doc&&e.doc.lugarPais)||"";fillCZ();$("cZ").value=o.zk||(e.doc&&e.doc.lugarZona)||"";
+  $("dCuadro").showModal();
+}
+const saveOvr=(ok,d)=>setDoc(doc(db,"cuadros",encodeURIComponent(ok)),{key:ok,...d});
+$("fCuadro").onsubmit=async ev=>{
+  ev.preventDefault();$("cMsg").textContent="";$("cSave").disabled=true;
+  try{
+    const padre=$("cPadre").value.trim(),sub=$("cSub").value.trim();
+    if(!padre)throw new Error("falta el nombre del cuadro");
+    await Promise.all(cEnt.oks.map(ok=>{
+      const old=OVR.get(ok)||STATIC_FIX[ok]||{};
+      return saveOvr(ok,{padre,sub,variante:cEnt.oks.length>1?(old.variante||""):$("cVar").value.trim(),pk:$("cP").value,zk:$("cZ").value,deleted:false});
+    }));
+    $("dCuadro").close();
+  }catch(err){$("cMsg").textContent="No se pudo guardar: "+err.message}
+  finally{$("cSave").disabled=false}
+};
+async function quitar(list,msg){
+  if(!confirm(msg))return;
+  try{
+    await Promise.all(list.flatMap(e=>e.oks.map(ok=>saveOvr(ok,{padre:e.padre,sub:e.sub,deleted:true}))));
+    $("dCuadro").close();location.hash="#/";
+  }catch(err){$("cMsg").textContent="No se pudo quitar: "+err.message}
+}
+$("cDel").onclick=()=>quitar([cEnt],`¿Quitar "${cEnt.nombre}" del repertorio?\n\nNo se borran sus videos ni fotos de la base de datos, solo deja de mostrarse.`);
+$("cDelAll").onclick=()=>{const l=ENT.filter(x=>norm(x.padre)===norm(cEnt.padre));quitar(l,`¿Quitar el cuadro "${cEnt.padre}" completo (${plural(l.length,"baile")})?\n\nNo se borran sus videos ni fotos de la base de datos, solo deja de mostrarse.`)};
 
 /* ---------- Formulario de baile ---------- */
 let editId=null,fm=[];
