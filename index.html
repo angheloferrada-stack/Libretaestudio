@@ -207,6 +207,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .vlines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .vlines line{stroke:var(--teal);stroke-width:1.4}
 .vlines circle{fill:var(--teal)}
+.flagimg{width:72px;height:auto;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;box-shadow:0 2px 6px -2px rgba(0,0,0,.25);flex:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -255,6 +256,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <label for="signif">Descripción</label><textarea id="signif" rows="3"></textarea>
   <label for="letra">Letra (opcional)</label><textarea id="letra" rows="4"></textarea>
   <label for="trad">Traducción (opcional)</label><textarea id="trad" rows="4"></textarea>
+  <div id="carpBox" hidden><label>Carpetas de videos (solo Diablada)</label><div id="carpList" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div><div style="display:flex;gap:8px"><input id="carpNew" placeholder="Nueva carpeta (ej. Figurines)" style="flex:1"><button type="button" class="btn small" id="carpAdd">+ Carpeta</button></div></div>
   <label>Videos, fotos y audios</label>
   <div id="mlist"></div>
   <label class="btn small" for="files" style="display:inline-block;margin:4px 0 0;cursor:pointer">+ Agregar videos, fotos o audios</label>
@@ -296,12 +298,14 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   </div>
   <div class="msg" id="cMsg" role="alert"></div>
   <div class="acts" style="justify-content:space-between">
-    <span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small danger" id="cDel">Quitar este baile</button><button type="button" class="btn small danger" id="cDelAll">Quitar todo el cuadro</button></span>
+    <span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small danger" id="cDel">Quitar este baile</button><button type="button" class="btn small danger" id="cDelAll">Quitar todo el cuadro</button><button type="button" class="btn small" id="cConfOn">Añadir sección confección</button><button type="button" class="btn small danger" id="cConfOff">Quitar sección confección</button></span>
     <span style="display:flex;gap:8px"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="cSave">Guardar</button></span>
   </div>
 </form></dialog>
 
-<dialog id="dFlag"><div class="dlg" style="text-align:center"><div id="flagBig" style="font-size:7rem;line-height:1.1" aria-hidden="true"></div><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
+<dialog id="dConf"><form class="dlg" id="fConf"><h2>Videos de confección</h2><p class="hint">Tutoriales de cómo se confeccionan implementos del vestuario.</p><label for="cfTit">Título (opcional)</label><input id="cfTit" placeholder="Ej: Cómo hacer la faja"><label for="cfFile">Videos</label><input id="cfFile" type="file" accept="video/*" multiple><p class="hint">Hasta 100 MB por video.</p><progress id="cfProg" max="100" value="0" hidden></progress><div class="msg" id="cfMsg" role="alert"></div><div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="cfSave">Guardar</button></div></form></dialog>
+
+<dialog id="dFlag"><div class="dlg" style="text-align:center"><img id="flagBig" alt="" style="width:min(70vw,320px);border-radius:8px"><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
 
 <dialog id="dVer"><div class="dlg">
   <h2>Novedades</h2>
@@ -320,8 +324,13 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.2.0";
+const APP_VERSION="2.3.0";
 const CHANGELOG=[
+  {v:"2.3.0",fecha:"24 de octubre de 2026",items:[
+    "La bandera de cada país ahora es la imagen de la bandera.",
+    "Cada baile puede tener una sección Confección con tutoriales de cómo hacer implementos del vestuario. Se activa desde Editar cuadro.",
+    "Los videos de un baile se separan en videos de presentación y videos de ensayo.",
+    "En Diablada, los videos se pueden ordenar en carpetas (Figurines, Chola y diablo, Cóndor, etc.)."]},
   {v:"2.2.0",fecha:"19 de octubre de 2026",items:[
     "Al agregar una prenda se puede elegir un baile nuevo del cuadro (por ejemplo, un baile solo de Ecuador).",
     "Los administradores pueden editar y quitar cuadros y bailes desde la página del baile (botón Editar cuadro).",
@@ -441,6 +450,7 @@ const GEO={"S":400,"paises":{"venezuela":{"d":"M-424.6,-64.1L-425.4,-63.8L-425.2
 const PAISES={chile:["Chile","CL"],argentina:["Argentina","AR"],peru:["Perú","PE"],colombia:["Colombia","CO"],mexico:["México","MX"],ecuador:["Ecuador","EC"],venezuela:["Venezuela","VE"],paraguay:["Paraguay","PY"],bolivia:["Bolivia","BO"],brasil:["Brasil","BR"],uruguay:["Uruguay","UY"],guyana:["Guyana","GY"],surinam:["Surinam","SR"],guatemala:["Guatemala","GT"],belice:["Belice","BZ"],honduras:["Honduras","HN"],elsalvador:["El Salvador","SV"],nicaragua:["Nicaragua","NI"],costarica:["Costa Rica","CR"],panama:["Panamá","PA"]};
 const PKEYS=Object.keys(PAISES).sort((a,b)=>PAISES[a][0].localeCompare(PAISES[b][0],"es"));
 const flagOf=iso=>String.fromCodePoint(...[...iso].map(c=>127397+c.charCodeAt(0)));
+const flagUrl=pk=>`https://flagcdn.com/w160/${PAISES[pk][1].toLowerCase()}.png`;
 const PALIAS={brazil:"brasil",belize:"belice",panama:"panama"};
 const paisKey=n=>{const k=norm(n).replace(/\s+/g,"");return PAISES[k]?k:(PALIAS[k]||"")};
 const lonX=l=>GEO.S*l*Math.PI/180;
@@ -641,7 +651,7 @@ function placeView(pk,zk){
   if(!P)return back+`<div class="empty">Ese país no está en el mapa.</div>`;
   const Z=ZONAS[pk],zone=Z&&zk?Z.find(z=>z.k===zk):null;
   const here=ENT.filter(e=>e.pk===pk).sort(byName);
-  const flag=`<button type="button" class="btn small acc" data-act="flag" data-pk="${pk}">Bandera</button>`;
+  const flag=`<img class="flagimg" data-act="flag" data-pk="${pk}" src="${flagUrl(pk)}" alt="Bandera">`;
   if(Z&&!zone){
     pendingMap={mode:"country",pk,zk:""};
     const chips=Z.filter(z=>!ONLYDATA.has(pk)||here.some(e=>e.zk===z.k)).map(z=>{const n=here.filter(e=>e.zk===z.k).length;return `<a class="chipz" href="#/p/${pk}/z/${z.k}"><b>${z.n}</b><small>${n?plural(n,"baile"):"sin bailes aún"}</small></a>`}).join("");
@@ -660,7 +670,10 @@ function detailView(e){
   const b=e.doc||{},m=e.doc?mediaOf(b):[];
   const vids=m.filter(x=>x.tipo==="video"&&safe(x.url)),auds=m.filter(x=>x.tipo==="audio"&&safe(x.url)),pics=m.filter(x=>x.tipo!=="video"&&x.tipo!=="audio"&&safe(x.url));
   const blk=(h,inner)=>`<section class="blk"><h3>${h}</h3>${inner}</section>`;
-  const vidH=vids.length?blk("Videos",vids.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video></div>`).join("")):"";
+  const vidOf=arr=>arr.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video></div>`).join("");
+  let vidH="";
+  if(norm(e.padre)==="diablada"){const cs=[...(b.carpetas||[])];const grp=[...cs.map(c=>[c,vids.filter(x=>x.carpeta===c)]),["Sin carpeta",vids.filter(x=>!x.carpeta||!cs.includes(x.carpeta))]].filter(g=>g[1].length);vidH=grp.length?`<div class="stack">${grp.map(([c,l])=>blk(esc(cs.length?c:"Videos"),vidOf(l))).join("")}</div>`:""}
+  else{const pres=vids.filter(x=>x.sec==="presentacion"),ens=vids.filter(x=>x.sec!=="presentacion");vidH=(pres.length||ens.length)?`<div class="stack">${pres.length?blk("Videos de presentación",vidOf(pres)):""}${ens.length?blk("Videos de ensayo",vidOf(ens)):""}</div>`:""}
   const audH=auds.length?blk("Audio",auds.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Audio "+(i+1))}</p><audio src="${esc(safe(x.url))}" controls preload="metadata"></audio></div>`).join("")):"";
   const picH=pics.length?blk("Fotos",`<div class="photos">${pics.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||e.nombre)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div>`):"";
   const letraH=b.letra?blk("Letra",`<div class="text">${esc(b.letra)}</div>`):"";
@@ -670,7 +683,7 @@ function detailView(e){
   const body=row([vidH,right?`<div class="stack">${right}</div>`:""])+row([letraH,tradH]);
   const chips=[["Baile",e.sub],["País",b.pais||(e.pk?PAISES[e.pk][0]:"")],["Región",b.region||zoneName(e)]].filter(c=>c[1]&&norm(c[1])!==norm(e.nombre));
   const k=encodeURIComponent(e.id);
-  return `<div class="dhead"><a class="back" href="${placeUrl(e)}">← ${esc(e.pk?(e.zk?zoneName(e):PAISES[e.pk][0]):"Países")}</a><a class="btn small acc" href="#/b/${k}/v/h">Vestuario</a></div>
+  return `<div class="dhead"><a class="back" href="${placeUrl(e)}">← ${esc(e.pk?(e.zk?zoneName(e):PAISES[e.pk][0]):"Países")}</a>${((OVR.get(e.oks[0])||{}).confActiva)?`<a class="btn small" href="#/b/${k}/c">Confección</a>`:""}<a class="btn small acc" href="#/b/${k}/v/h">Vestuario</a></div>
   <article class="det" style="--c:${colorOf(norm(e.padre))}">
     <span class="kick">Cuadro ${esc(e.padre)}</span>
     <h1>${esc(e.nombre)}</h1>
@@ -742,6 +755,15 @@ function drawLines(){
 const redraw=()=>{if($("vfig"))requestAnimationFrame(drawLines)};
 window.addEventListener("scroll",redraw,{passive:true});window.addEventListener("resize",redraw);
 
+function confView(e){
+  const k=encodeURIComponent(e.id),o=OVR.get(e.oks[0])||{},on=!!o.confActiva,vids=(o.confVideos||[]).filter(x=>safe(x.url));
+  const back=`<div class="dhead"><a class="back" href="#/b/${k}">← ${esc(e.nombre)}</a></div>`;
+  const head=`<div class="lhead" style="--c:var(--teal)"><span class="kick">Confección · ${esc(e.padre)}</span><h1>${esc(e.nombre)}</h1></div>`;
+  if(!on)return back+head+`<div class="empty">Este baile no tiene sección de confección.</div>`;
+  const act=user?`<div class="vtools"><button class="btn small acc" data-act="cfadd" data-id="${esc(e.id)}">+ Agregar video de confección</button></div>`:"";
+  const list=vids.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video>${user?`<div class="vtools"><button class="btn small danger" data-act="cfdel" data-id="${esc(e.id)}" data-i="${i}">Quitar video</button></div>`:""}</div>`).join("");
+  return back+head+act+(list?`<section class="sec">${list}</section>`:`<div class="empty">Aún no hay videos de confección.</div>`);
+}
 function render(){
   const r=getRoute(),t=r[0];
   $("searchbox").hidden=!!t;
@@ -753,7 +775,7 @@ function render(){
   if(t==="p")html=placeView(r[1],r[2]==="z"?r[3]:"");
   else if(t==="b"){
     const e=ENT.find(x=>x.id===r[1]);
-    html=!e?`<a class="back" href="#/">← Países</a><div class="empty">No encontré ese baile.</div>`:r[2]==="v"?vestView(e,r[3],r[4]):detailView(e);
+    html=!e?`<a class="back" href="#/">← Países</a><div class="empty">No encontré ese baile.</div>`:r[2]==="v"?vestView(e,r[3],r[4]):r[2]==="c"?confView(e):detailView(e);
   }else html=homeView();
   $("view").innerHTML=html;
   if(pendingMap&&$("mapbox"))mapState(pendingMap);else lastKey=null;
@@ -787,7 +809,9 @@ document.addEventListener("click",e=>{
   else if(act==="edit")openForm(bailes.find(x=>x.id===a.dataset.id));
   else if(act==="del")deleteBaile(a.dataset.id);
   else if(act==="newph"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openForm(null,{nombre:e.nombre,cuadro:e.padre,subtipo:e.sub,pais:e.pk?PAISES[e.pk][0]:"",region:zoneName(e)})}
-  else if(act==="flag"){const P=PAISES[a.dataset.pk];if(P){$("flagBig").textContent=flagOf(P[1]);$("flagName").textContent=P[0];$("dFlag").showModal()}}
+  else if(act==="flag"){const P=PAISES[a.dataset.pk];if(P){$("flagBig").src=flagUrl(a.dataset.pk);$("flagBig").alt=P[0];$("flagName").textContent=P[0];$("dFlag").showModal()}}
+  else if(act==="cfadd"){const e=ENT.find(x=>x.id===a.dataset.id);if(e){cfEnt=e;$("fConf").reset();$("cfMsg").textContent="";$("cfProg").hidden=true;$("dConf").showModal()}}
+  else if(act==="cfdel"){const e=ENT.find(x=>x.id===a.dataset.id);if(e&&confirm("¿Quitar este video de confección?")){const o=OVR.get(e.oks[0])||{};saveOvr(e.oks[0],{confVideos:(o.confVideos||[]).filter((_,i)=>i!==+a.dataset.i)})}}
   else if(act==="ecuadro"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openCuadro(e)}
   else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g,a.dataset.s,a.dataset.v);
   else if(act==="vedit"){const x=vestDocs.find(v=>v.id===a.dataset.id);if(x)openVest(x,norm(x.padre),x.genero)}
@@ -902,7 +926,7 @@ function openCuadro(e){
   $("cP").value=o.pk||(e.doc&&e.doc.lugarPais)||"";fillCZ();$("cZ").value=o.zk||(e.doc&&e.doc.lugarZona)||"";
   $("dCuadro").showModal();
 }
-const saveOvr=(ok,d)=>setDoc(doc(db,"cuadros",encodeURIComponent(ok)),{key:ok,...d});
+const saveOvr=(ok,d)=>setDoc(doc(db,"cuadros",encodeURIComponent(ok)),{key:ok,...d},{merge:true});
 $("fCuadro").onsubmit=async ev=>{
   ev.preventDefault();$("cMsg").textContent="";$("cSave").disabled=true;
   try{
@@ -926,25 +950,63 @@ async function quitar(list,msg){
 $("cDel").onclick=()=>quitar([cEnt],`¿Quitar "${cEnt.nombre}" del repertorio?\n\nNo se borran sus videos ni fotos de la base de datos, solo deja de mostrarse.`);
 $("cDelAll").onclick=()=>{const l=ENT.filter(x=>norm(x.padre)===norm(cEnt.padre));quitar(l,`¿Quitar el cuadro "${cEnt.padre}" completo (${plural(l.length,"baile")})?\n\nNo se borran sus videos ni fotos de la base de datos, solo deja de mostrarse.`)};
 
+$("cConfOn").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:true});$("cMsg").textContent="Sección confección añadida. Ya sale el botón Confección en el baile."}catch(err){$("cMsg").textContent="No se pudo: "+err.message}};
+$("cConfOff").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:false});$("cMsg").textContent="Sección confección quitada (los videos quedan guardados)."}catch(err){$("cMsg").textContent="No se pudo: "+err.message}};
+
+/* ---------- Videos de confección ---------- */
+let cfEnt=null;
+$("fConf").onsubmit=async ev=>{
+  ev.preventDefault();const msg=$("cfMsg"),btn=$("cfSave");msg.textContent="";btn.disabled=true;
+  try{
+    const files=[...$("cfFile").files];if(!files.length)throw new Error("elige al menos un video");
+    const list=[...((OVR.get(cfEnt.oks[0])||{}).confVideos||[])];
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      if(!f.type.startsWith("video/"))throw new Error(`"${f.name}" no es un video`);
+      if(f.size>MAX_VIDEO)throw new Error(`"${f.name}" pesa más de 100 MB`);
+      $("cfProg").hidden=false;$("cfProg").value=0;msg.textContent=`Subiendo ${i+1} de ${files.length}…`;
+      const r=await uploadFile(f,p=>{$("cfProg").value=p});
+      list.push({url:r.secure_url,titulo:($("cfTit").value.trim()||f.name.replace(/\.[^.]+$/,""))+(files.length>1?` ${i+1}`:"")});
+    }
+    await saveOvr(cfEnt.oks[0],{confVideos:list,confActiva:true});
+    $("dConf").close();
+  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  finally{btn.disabled=false;$("cfProg").hidden=true}
+};
+
 /* ---------- Formulario de baile ---------- */
 let editId=null,fm=[];
 $("lugP").innerHTML=`<option value="">Automática (según el cuadro)</option>`+PKEYS.map(k=>`<option value="${k}">${esc(PAISES[k][0])}</option>`).join("");
 function fillLugZ(){const p=$("lugP").value,Z=ZONAS[p];$("lugZ").innerHTML=`<option value="">${p?(Z?"Sin zona":"—"):"Automática"}</option>`+(Z?Z.map(z=>`<option value="${z.k}">${esc(z.n)}</option>`).join(""):"");$("lugZ").disabled=!p||!Z}
 $("lugP").onchange=fillLugZ;
+let fCarp=[];
+const carpOn=()=>norm(parseCuadro($("cuadro").value).padre)==="diablada";
+function renderCarp(){$("carpList").innerHTML=fCarp.map(c=>`<span class="chip">${esc(c)}</span>`).join("")||`<p class="hint">Aún no hay carpetas.</p>`}
+function updCarp(){$("carpBox").hidden=!carpOn();renderCarp()}
+$("cuadro").addEventListener("input",()=>{updCarp();renderFm()});
+$("carpAdd").onclick=()=>{const n=$("carpNew").value.trim();if(n&&!fCarp.includes(n))fCarp.push(n);$("carpNew").value="";renderCarp();renderFm()};
 function openForm(b,pre){
+  fCarp=b&&Array.isArray(b.carpetas)?[...b.carpetas]:[];
   editId=b?b.id:null;
-  fm=b?mediaOf(b).map(x=>({tipo:x.tipo==="video"||x.tipo==="audio"?x.tipo:"image",url:x.url,titulo:x.titulo||""})):[];
+  fm=b?mediaOf(b).map(x=>({tipo:x.tipo==="video"||x.tipo==="audio"?x.tipo:"image",url:x.url,titulo:x.titulo||"",sec:x.sec||"",carpeta:x.carpeta||""})):[];
   $("fAdd").reset();
   $("addTitle").textContent=b?"Editar baile":"Agregar baile";
   if(b){$("nombre").value=b.nombre||"";$("cuadro").value=padreOf(b)==="Sin cuadro"?"":padreOf(b);$("subtipo").value=subOf(b);$("pais").value=b.pais||"";$("region").value=b.region||"";$("signif").value=b.significado||"";$("letra").value=b.letra||"";$("trad").value=b.traduccion||"";$("lugP").value=b.lugarPais||"";fillLugZ();$("lugZ").value=b.lugarZona||""}
   else{fillLugZ();if(pre){$("nombre").value=pre.nombre||"";$("cuadro").value=pre.cuadro||"";$("subtipo").value=pre.subtipo||"";$("pais").value=pre.pais||"";$("region").value=pre.region||""}}
   $("addMsg").textContent="";$("prog").hidden=true;$("btnSave").disabled=false;
-  renderFm();$("dAdd").showModal();
+  updCarp();renderFm();$("dAdd").showModal();
 }
 function renderFm(){
-  $("mlist").innerHTML=fm.map((x,i)=>`<div class="mrow"><div class="th">${x.tipo==="video"?"VIDEO":x.tipo==="audio"?"AUDIO":`<img alt="" src="${esc(x.prev||safe(x.url))}">`}</div><input data-mt="${i}" value="${esc(x.titulo)}" placeholder="Título (opcional)" aria-label="Título del archivo ${i+1}"><button type="button" class="x" data-mrm="${i}" aria-label="Quitar archivo ${i+1}">✕</button></div>`).join("")||`<p class="hint">Aún no hay videos ni fotos.</p>`;
+  $("mlist").innerHTML=fm.map((x,i)=>{
+    const th=`<div class="th">${x.tipo==="video"?"VIDEO":x.tipo==="audio"?"AUDIO":`<img alt="" src="${esc(x.prev||safe(x.url))}">`}</div>`;
+    const sel="flex:1;min-width:0;padding:8px;border:1.5px solid var(--line);border-radius:10px;background:#fff";
+    const sec=x.tipo==="video"?`<select data-ms="${i}" aria-label="Sección del video ${i+1}" style="${sel}"><option value="ensayo"${x.sec==="presentacion"?"":" selected"}>Video de ensayo</option><option value="presentacion"${x.sec==="presentacion"?" selected":""}>Video de presentación</option></select>`:"";
+    const car=x.tipo==="video"&&carpOn()?`<select data-mc="${i}" aria-label="Carpeta del video ${i+1}" style="${sel}"><option value="">Sin carpeta</option>${fCarp.map(c=>`<option value="${esc(c)}"${x.carpeta===c?" selected":""}>${esc(c)}</option>`).join("")}</select>`:"";
+    return `<div class="mrow" style="flex-wrap:wrap">${th}<input data-mt="${i}" value="${esc(x.titulo)}" placeholder="Título (opcional)" aria-label="Título del archivo ${i+1}"><button type="button" class="x" data-mrm="${i}" aria-label="Quitar archivo ${i+1}">✕</button>${sec||car?`<div style="display:flex;gap:6px;width:100%">${sec}${car}</div>`:""}</div>`;
+  }).join("")||`<p class="hint">Aún no hay videos ni fotos.</p>`;
 }
 $("mlist").addEventListener("input",e=>{const i=e.target.dataset.mt;if(i!==undefined)fm[i].titulo=e.target.value});
+$("mlist").addEventListener("change",e=>{const i=e.target.dataset.ms,c=e.target.dataset.mc;if(i!==undefined)fm[i].sec=e.target.value;if(c!==undefined)fm[c].carpeta=e.target.value});
 $("mlist").addEventListener("click",e=>{const i=e.target.closest("[data-mrm]")?.dataset.mrm;if(i!==undefined){fm.splice(+i,1);renderFm()}});
 $("files").onchange=e=>{
   const msg=$("addMsg");msg.textContent="";
@@ -975,7 +1037,7 @@ $("fAdd").onsubmit=async e=>{
     const data={
       nombre:$("nombre").value.trim(),cuadro:pc.padre,subtipo:$("subtipo").value.trim()||pc.sub,pais:$("pais").value.trim(),region:$("region").value.trim(),
       significado:$("signif").value.trim(),letra:$("letra").value.trim(),traduccion:$("trad").value.trim(),lugarPais:$("lugP").value,lugarZona:$("lugZ").value,
-      media:fm.map(x=>({tipo:x.tipo,url:x.url,titulo:(x.titulo||"").trim()}))
+      media:fm.map(x=>({tipo:x.tipo,url:x.url,titulo:(x.titulo||"").trim(),sec:x.sec||"",carpeta:x.carpeta||""})),carpetas:fCarp
     };
     if(editId)await updateDoc(doc(db,"bailes",editId),{...data,actualizado:serverTimestamp()});
     else await addDoc(collection(db,"bailes"),{...data,creado:serverTimestamp()});
