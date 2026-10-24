@@ -208,6 +208,15 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .vlines line{stroke:var(--teal);stroke-width:1.4}
 .vlines circle{fill:var(--teal)}
 .flagimg{width:72px;height:auto;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;box-shadow:0 2px 6px -2px rgba(0,0,0,.25);flex:none}
+.presbar{display:flex;gap:10px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none}
+.presbar::-webkit-scrollbar{display:none}
+.pres{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 16px;border-radius:18px;background:var(--ink);color:#fff;border:0;cursor:pointer;text-align:left;box-shadow:0 8px 18px -10px rgba(20,24,28,.6)}
+.pres b{font:700 .95rem/1.1 "DM Sans",sans-serif;text-transform:capitalize}
+.pres span{font-size:.8rem;opacity:.85;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pbl{max-height:230px;overflow:auto;border:1.5px solid var(--line);border-radius:10px;padding:4px 10px;background:#fff}
+.ck{display:flex;gap:8px;align-items:flex-start;font-weight:500;margin:8px 0}
+.ck small{color:var(--mute)}
+.pvl{margin:6px 0 0;padding-left:20px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -305,6 +314,24 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 
 <dialog id="dConf"><form class="dlg" id="fConf"><h2>Videos de confección</h2><p class="hint">Tutoriales de cómo se confeccionan implementos del vestuario.</p><label for="cfTit">Título (opcional)</label><input id="cfTit" placeholder="Ej: Cómo hacer la faja"><label for="cfFile">Videos</label><input id="cfFile" type="file" accept="video/*" multiple><p class="hint">Hasta 100 MB por video.</p><progress id="cfProg" max="100" value="0" hidden></progress><div class="msg" id="cfMsg" role="alert"></div><div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="cfSave">Guardar</button></div></form></dialog>
 
+<dialog id="dPres"><form class="dlg" id="fPres"><h2 id="pTitle">Nueva presentación</h2>
+  <label for="pFecha">Fecha</label><input id="pFecha" type="date" required>
+  <label for="pTit">Lugar o evento (opcional)</label><input id="pTit" placeholder="Ej: Fiesta patria en la plaza">
+  <label for="pBai">Bailarines (uno por línea)</label><textarea id="pBai" rows="5"></textarea>
+  <label>Bailes a presentar</label><div id="pBailes" class="pbl"></div>
+  <label for="pNotas">Notas o avisos</label><textarea id="pNotas" rows="4" placeholder="Ej: Llegar 18:30 con vestuario completo"></textarea>
+  <div class="msg" id="pMsg" role="alert"></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="pSave">Guardar</button></div>
+</form></dialog>
+
+<dialog id="dPresVer"><div class="dlg">
+  <span class="kick">Próxima presentación</span><h2 id="pvFecha"></h2>
+  <h3 class="vsub">Bailarines</h3><ul id="pvBai" class="pvl"></ul>
+  <h3 class="vsub">Bailes</h3><div id="pvBailes"></div>
+  <h3 class="vsub">Notas</h3><div class="text" id="pvNotas"></div>
+  <div class="acts"><span id="pvAdm" style="display:flex;gap:8px"><button type="button" class="btn small" id="pvEdit">Editar</button><button type="button" class="btn small danger" id="pvDel">Eliminar</button></span><button type="button" class="btn small" data-close>Cerrar</button></div>
+</div></dialog>
+
 <dialog id="dFlag"><div class="dlg" style="text-align:center"><img id="flagBig" alt="" style="width:min(70vw,320px);border-radius:8px"><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
 
 <dialog id="dVer"><div class="dlg">
@@ -324,8 +351,11 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.3.0";
+const APP_VERSION="2.4.0";
 const CHANGELOG=[
+  {v:"2.4.0",fecha:"24 de octubre de 2026",items:[
+    "Nuevas burbujas de presentaciones en el inicio, con fecha. Al tocarlas aparecen los bailarines, los bailes (para ir directo a cada uno) y las notas.",
+    "Los administradores pueden crear, editar y eliminar presentaciones desde el inicio."]},
   {v:"2.3.0",fecha:"24 de octubre de 2026",items:[
     "La bandera de cada país ahora es la imagen de la bandera.",
     "Cada baile puede tener una sección Confección con tutoriales de cómo hacer implementos del vestuario. Se activa desde Editar cuadro.",
@@ -426,6 +456,9 @@ onSnapshot(query(collection(db,"bailes"),orderBy("nombre")),
 onSnapshot(collection(db,"vestuario"),
   s=>{vestRaw=s.docs.map(d=>({id:d.id,...d.data()}));rebuildVest();render()},
   ()=>{vestRaw=[];vestDocs=[];render()});
+onSnapshot(collection(db,"presentaciones"),
+  s=>{presList=s.docs.map(d=>({id:d.id,...d.data()}));render()},
+  ()=>{});
 onSnapshot(collection(db,"cuadros"),
   s=>{OVR=new Map(s.docs.map(d=>[d.data().key,d.data()]));rebuildVest();updateLists();render()},
   ()=>{});
@@ -642,7 +675,7 @@ function homeView(){
   }
   pendingMap={mode:"home",pk:"",zk:""};
   const otros=ENT.filter(e=>!e.pk).sort(byName);
-  return `<div class="hero"><span class="kick">Repertorio</span><h1>Países</h1><p>Toca un país de color para ver sus bailes. Arrastra el mapa para moverte y pellizca para acercar.</p></div><div id="mapbox" class="mapbox home"></div>`
+  return presHtml()+`<div class="hero"><span class="kick">Repertorio</span><h1>Países</h1><p>Toca un país de color para ver sus bailes. Arrastra el mapa para moverte y pellizca para acercar.</p></div><div id="mapbox" class="mapbox home"></div>`
     +(otros.length?`<h3 class="vsub">Otros bailes</h3><div style="margin-top:12px">${otros.map(e=>rowHtml(e)).join("")}</div>`:"");
 }
 
@@ -812,6 +845,8 @@ document.addEventListener("click",e=>{
   else if(act==="flag"){const P=PAISES[a.dataset.pk];if(P){$("flagBig").src=flagUrl(a.dataset.pk);$("flagBig").alt=P[0];$("flagName").textContent=P[0];$("dFlag").showModal()}}
   else if(act==="cfadd"){const e=ENT.find(x=>x.id===a.dataset.id);if(e){cfEnt=e;$("fConf").reset();$("cfMsg").textContent="";$("cfProg").hidden=true;$("dConf").showModal()}}
   else if(act==="cfdel"){const e=ENT.find(x=>x.id===a.dataset.id);if(e&&confirm("¿Quitar este video de confección?")){const o=OVR.get(e.oks[0])||{};saveOvr(e.oks[0],{confVideos:(o.confVideos||[]).filter((_,i)=>i!==+a.dataset.i)})}}
+  else if(act==="pres"){const p=presList.find(x=>x.id===a.dataset.id);if(p)openPresView(p)}
+  else if(act==="presnew")openPresForm(null)
   else if(act==="ecuadro"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openCuadro(e)}
   else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g,a.dataset.s,a.dataset.v);
   else if(act==="vedit"){const x=vestDocs.find(v=>v.id===a.dataset.id);if(x)openVest(x,norm(x.padre),x.genero)}
@@ -972,6 +1007,52 @@ $("fConf").onsubmit=async ev=>{
     $("dConf").close();
   }catch(err){msg.textContent="No se pudo guardar: "+err.message}
   finally{btn.disabled=false;$("cfProg").hidden=true}
+};
+
+/* ---------- Presentaciones (burbujas del inicio) ---------- */
+let presList=[],presEditId=null,pvId=null;
+const fmtFecha=f=>new Date(f+"T12:00:00").toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short"});
+function presHtml(){
+  const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
+  const up=presList.filter(p=>p.fecha>=hs).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,4);
+  const add=user?`<div class="vtools"><button class="btn small acc" data-act="presnew">+ Presentación</button></div>`:"";
+  return `<div class="presbar">${up.map(p=>`<button type="button" class="pres" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}</b><span>${esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}`;
+}
+function openPresView(p){
+  pvId=p.id;
+  $("pvFecha").textContent=fmtFecha(p.fecha)+(p.titulo?" · "+p.titulo:"");
+  $("pvBai").innerHTML=(p.bailarines||[]).map(b=>`<li>${esc(b)}</li>`).join("")||`<li class="hint">Aún no hay bailarines anotados.</li>`;
+  $("pvBailes").innerHTML=(p.bailes||[]).map(b=>`<a class="row" style="--c:var(--teal)" href="#/b/${encodeURIComponent(b.id)}"><span><b>${esc(b.nombre)}</b></span><span class="go" aria-hidden="true">›</span></a>`).join("")||`<p class="hint">Sin bailes asignados.</p>`;
+  $("pvNotas").textContent=p.notas||"Sin notas.";
+  $("pvAdm").style.display=user?"flex":"none";
+  $("dPresVer").showModal();
+}
+$("dPresVer").addEventListener("click",e=>{if(e.target.closest("a"))$("dPresVer").close()});
+$("pvEdit").onclick=()=>{$("dPresVer").close();openPresForm(presList.find(x=>x.id===pvId))};
+$("pvDel").onclick=async()=>{if(!confirm("¿Eliminar esta presentación?"))return;try{await deleteDoc(doc(db,"presentaciones",pvId));$("dPresVer").close()}catch(err){alert("No se pudo eliminar: "+err.message)}};
+function openPresForm(p){
+  presEditId=p?p.id:null;
+  $("fPres").reset();$("pMsg").textContent="";
+  $("pTitle").textContent=p?"Editar presentación":"Nueva presentación";
+  $("pFecha").value=p?p.fecha:"";
+  $("pTit").value=p?(p.titulo||""):"";
+  $("pBai").value=p?(p.bailarines||[]).join("\n"):"";
+  $("pNotas").value=p?(p.notas||""):"";
+  const sel=new Set(p?(p.bailes||[]).map(b=>b.id):[]);
+  $("pBailes").innerHTML=entries().sort(byName).map(e=>`<label class="ck"><input type="checkbox" value="${esc(e.id)}" data-nm="${esc(e.nombre)}"${sel.has(e.id)?" checked":""}><span>${esc(e.nombre)} <small>${esc(e.padre)}</small></span></label>`).join("");
+  $("dPres").showModal();
+}
+$("fPres").onsubmit=async ev=>{
+  ev.preventDefault();const msg=$("pMsg");msg.textContent="";$("pSave").disabled=true;
+  try{
+    const fecha=$("pFecha").value;if(!fecha)throw new Error("elige la fecha");
+    const bailes=[...$("pBailes").querySelectorAll("input:checked")].map(i=>({id:i.value,nombre:i.dataset.nm}));
+    const data={fecha,titulo:$("pTit").value.trim(),bailarines:$("pBai").value.split("\n").map(x=>x.trim()).filter(Boolean),bailes,notas:$("pNotas").value.trim()};
+    if(presEditId)await updateDoc(doc(db,"presentaciones",presEditId),data);
+    else await addDoc(collection(db,"presentaciones"),data);
+    $("dPres").close();
+  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  finally{$("pSave").disabled=false}
 };
 
 /* ---------- Formulario de baile ---------- */
