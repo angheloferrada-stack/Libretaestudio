@@ -204,6 +204,14 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .vth.no{display:grid;place-items:center;cursor:default;color:var(--mute);font-size:.66rem;border-style:dashed}
 .vact{display:flex;gap:6px;flex-wrap:wrap}
 .vn .vact .btn{padding:6px 10px;font-size:.74rem}
+.vi.propia .vth{border-color:var(--mag);border-style:dashed}
+.vi.propia .vn b{color:var(--mag)}
+.vbody{position:relative;width:210px;max-width:70%;margin:8px auto 4px}
+.vbody .sil{width:100%;height:auto;display:block}
+.vbody .vhit{position:absolute;inset:0;width:100%;height:100%}
+.vhit circle{fill:transparent;cursor:pointer}
+.vhit g.on circle{fill:rgba(194,48,138,.28);stroke:var(--mag);stroke-width:1.6}
+.vhit text{font:700 8.5px "DM Sans",sans-serif;fill:var(--ink);text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:2.5px}
 .vlines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .vlines line{stroke:var(--teal);stroke-width:1.4}
 .vlines circle{fill:var(--teal)}
@@ -291,7 +299,8 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <div id="vNuevoBox" hidden><label for="vNuevo">Nombre del baile nuevo</label><input id="vNuevo" placeholder="Ej: Sanjuanito"></div>
   <label for="vVar">Variante de vestuario (opcional)</label><input id="vVar" list="lVars" placeholder="Ej: Cacique"><datalist id="lVars"></datalist>
   <p class="hint">Úsala cuando un mismo baile tiene varios trajes (ej. Tobas: Cacique, Guerreros, Izozog).</p>
-  <label for="vParte">Parte del cuerpo</label><select id="vParte"><option value="">Automática (según el nombre)</option><option value="cabeza">Cabeza (sombrero, careta…)</option><option value="cuello">Cuello (pañuelo, corbatín…)</option><option value="torso">Torso (camisa, chaqueta…)</option><option value="cintura">Cintura (faja, cinturón…)</option><option value="mano">Mano o accesorio (bastón, bolso…)</option><option value="piernas">Piernas (pantalón, falda…)</option><option value="pies">Pies (zapatos, botas…)</option><option value="ejemplo">Foto de ejemplo (traje completo)</option></select>
+  <div id="vBody" class="vbody"></div>
+  <label for="vParte">Parte del cuerpo (o toca el dibujo)</label><select id="vParte"><option value="">Automática (según el nombre)</option><option value="cabeza">Cabeza (sombrero, careta…)</option><option value="cuello">Cuello (pañuelo, corbatín…)</option><option value="torso">Torso (camisa, chaqueta…)</option><option value="cintura">Cintura (faja, cinturón…)</option><option value="mano">Mano o accesorio (bastón, bolso…)</option><option value="piernas">Piernas (pantalón, falda…)</option><option value="pies">Pies (zapatos, botas…)</option><option value="ejemplo">Foto de ejemplo (traje completo)</option></select>
   <label for="vOri">Origen de la prenda</label><select id="vOri"><option value="conjunto">Del conjunto (la entrega el conjunto)</option><option value="propia">Propia (de cada bailarín)</option></select>
   <label for="vFoto">Foto (opcional)</label><input id="vFoto" type="file" accept="image/*">
   <p class="hint" id="vActual"></p>
@@ -361,8 +370,11 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.5.0";
+const APP_VERSION="2.5.1";
 const CHANGELOG=[
+  {v:"2.5.1",fecha:"24 de octubre de 2026",items:[
+    "Las prendas propias de cada bailarín aparecen en su parte del cuerpo, en color magenta y con la nota (propia del bailarín).",
+    "Al agregar una prenda, se puede tocar el dibujo para elegir la parte del cuerpo donde va (cabeza, cuello, torso, cintura, accesorios, piernas o pies)."]},
   {v:"2.5.0",fecha:"24 de octubre de 2026",items:[
     "El vestuario separa las prendas del conjunto (las entrega el conjunto) de las prendas propias de cada bailarín.",
     "Las presentaciones tienen una sección Maquillaje, con texto y fotos de ejemplo.",
@@ -771,7 +783,7 @@ function vestView(e,g,vsel){
   const act=x=>user&&!usingBase&&x.id?`<span class="vact"><button class="btn small" data-act="vedit" data-id="${esc(x.id)}">Editar</button><button class="btn small danger" data-act="vdel" data-id="${esc(x.id)}">Eliminar</button></span>`:"";
   const PL={cabeza:"Cabeza",cuello:"Cuello",torso:"Torso",cintura:"Cintura",mano:"Accesorios",piernas:"Piernas",pies:"Pies"};
   const th=x=>fotoOk(x.foto)?`<button type="button" class="vth" data-zoom="${esc(x.foto)}" data-cap="${esc(x.nombre)}"><img loading="lazy" src="${esc(x.foto)}" alt="${esc(x.nombre)}"></button>`:`<span class="vth no">Sin foto</span>`;
-  const rowsFor=lst=>Object.keys(PARTS).map(p=>({p,items:lst.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi">${th(x)}<span class="vn"><b>${esc(x.nombre)}</b>${!x.baile&&e.sub?`<small>Todo el cuadro</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
+  const rowsFor=lst=>Object.keys(PARTS).map(p=>({p,items:lst.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi${x.origen==="propia"?" propia":""}">${th(x)}<span class="vn"><b>${esc(x.nombre)}${x.origen==="propia"?" (propia del bailarín)":""}</b>${!x.baile&&e.sub?`<small>Todo el cuadro</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
   const propias=pr.filter(x=>x.origen==="propia");
   const vq=selV?"/"+encodeURIComponent(selV):"";
   const gb=(gg,label,ic)=>`<a class="gbtn${g===gg?" on":""}" href="#/b/${k}/v/${gg}${vq}" aria-label="${label}" ${g===gg?'aria-current="page"':""}>${ic}</a>`;
@@ -786,7 +798,7 @@ function vestView(e,g,vsel){
   <div class="gsel"><div class="gl"><span>Mujer</span>${gb("m","Vestuario de mujer","♀")}</div><div class="gl"><span>Hombre</span>${gb("h","Vestuario de hombre","♂")}</div></div>
   ${vars.length?`<nav class="tabs sub" style="--c:var(--teal)" aria-label="Variantes de vestuario">${vars.map(v=>`<a href="#/b/${k}/v/${g}/${encodeURIComponent(v)}" ${v===selV?'aria-current="page" class="on"':""}>${esc(v)}</a>`).join("")}</nav>`:""}
   ${admin}
-  ${pr.length?`<div class="vfig" id="vfig" data-g="${g}"><div class="vfl"><svg class="sil" viewBox="0 0 100 240" aria-hidden="true">${SIL[g]}</svg></div><div class="vfr">${rowsFor(pr.filter(x=>x.origen!=="propia"))}${propias.length?`<h3 class="vsub">Prendas propias de cada bailarín</h3>`+rowsFor(propias):""}</div><svg class="vlines" id="vlines" aria-hidden="true"></svg></div>`:`<div class="empty">${g==="m"?"Aún no hay prendas de mujer para este baile.":"Vestuario pendiente de cargar."}</div>`}
+  ${pr.length?`<div class="vfig" id="vfig" data-g="${g}"><div class="vfl"><svg class="sil" viewBox="0 0 100 240" aria-hidden="true">${SIL[g]}</svg></div><div class="vfr">${rowsFor(pr)}</div><svg class="vlines" id="vlines" aria-hidden="true"></svg></div>`:`<div class="empty">${g==="m"?"Aún no hay prendas de mujer para este baile.":"Vestuario pendiente de cargar."}</div>`}
   ${exH}`;
 }
 function drawLines(){
@@ -908,6 +920,17 @@ function uploadFile(file,onProg){
 }
 
 /* ---------- Formulario de prenda (vestuario) ---------- */
+const PARTES_LBL={cabeza:"Cabeza",cuello:"Cuello",torso:"Torso",cintura:"Cintura",mano:"Accesorios",piernas:"Piernas",pies:"Pies"};
+function renderVBody(){
+  const g=$("vGen").value==="m"?"m":"h",A=ANCH[g],sel=$("vParte").value;
+  $("vBody").innerHTML=`<svg viewBox="0 0 100 240" class="sil" aria-hidden="true">${SIL[g]}</svg><svg viewBox="0 0 100 240" class="vhit" role="group" aria-label="Partes del cuerpo">${Object.keys(PARTS).map(p=>`<g data-vp="${p}" class="${p===sel?"on":""}"><circle cx="${A[p][0]}" cy="${A[p][1]}" r="11"/><text x="${A[p][0]}" y="${A[p][1]-14}">${PARTES_LBL[p]}</text></g>`).join("")}</svg>`
+    +`<p class="hint" style="text-align:center">${sel?"Elegida: "+PARTES_LBL[sel]+". Toca otra parte para cambiarla.":"Toca el lugar donde va la prenda."}</p><div class="vtools" style="justify-content:center"><button type="button" class="btn small" data-vauto>Automática (la app la adivina)</button></div>`;
+}
+$("vGen").addEventListener("change",renderVBody);
+$("vBody").addEventListener("click",e=>{
+  if(e.target.closest("[data-vauto]")){$("vParte").value="";renderVBody();return}
+  const g=e.target.closest("[data-vp]");if(!g)return;$("vParte").value=g.dataset.vp;renderVBody();
+});
 let vEdit=null,vPadre=null,vFotoActual="";
 function openVest(x,padreKey,g,sub,vari){
   const c=padres().find(p=>p.key===padreKey);if(!c)return;
@@ -922,6 +945,7 @@ function openVest(x,padreKey,g,sub,vari){
   $("vAlc").value=x?(x.baile||""):(c.subs.includes(sub)?sub:"");
   $("vParte").value=x?(x.parte||""):"";
   $("vOri").value=x?(x.origen||"conjunto"):"conjunto";
+  renderVBody();
   $("vVar").value=x?(x.variante||""):(vari||"");
   $("vActual").textContent=vFotoActual?"Esta prenda ya tiene foto. Elige otra solo si quieres reemplazarla.":"Sin foto todavía.";
   $("vMsg").textContent="";$("vProg").hidden=true;$("vSave").disabled=false;
