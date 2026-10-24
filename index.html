@@ -217,6 +217,11 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .ck{display:flex;gap:8px;align-items:flex-start;font-weight:500;margin:8px 0}
 .ck small{color:var(--mute)}
 .pvl{margin:6px 0 0;padding-left:20px}
+.pitem{padding:4px 0;border-bottom:1px solid var(--line)}
+.pitem[hidden],.pgrp[hidden]{display:none}
+.pdn{font-size:.85rem!important;padding:7px 10px!important;margin:0 0 6px!important}
+.pgh{font:700 .78rem/1 "DM Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:14px 0 4px}
+.pvb{margin-bottom:8px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -287,6 +292,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <label for="vVar">Variante de vestuario (opcional)</label><input id="vVar" list="lVars" placeholder="Ej: Cacique"><datalist id="lVars"></datalist>
   <p class="hint">Úsala cuando un mismo baile tiene varios trajes (ej. Tobas: Cacique, Guerreros, Izozog).</p>
   <label for="vParte">Parte del cuerpo</label><select id="vParte"><option value="">Automática (según el nombre)</option><option value="cabeza">Cabeza (sombrero, careta…)</option><option value="cuello">Cuello (pañuelo, corbatín…)</option><option value="torso">Torso (camisa, chaqueta…)</option><option value="cintura">Cintura (faja, cinturón…)</option><option value="mano">Mano o accesorio (bastón, bolso…)</option><option value="piernas">Piernas (pantalón, falda…)</option><option value="pies">Pies (zapatos, botas…)</option><option value="ejemplo">Foto de ejemplo (traje completo)</option></select>
+  <label for="vOri">Origen de la prenda</label><select id="vOri"><option value="conjunto">Del conjunto (la entrega el conjunto)</option><option value="propia">Propia (de cada bailarín)</option></select>
   <label for="vFoto">Foto (opcional)</label><input id="vFoto" type="file" accept="image/*">
   <p class="hint" id="vActual"></p>
   <progress id="vProg" max="100" value="0" hidden></progress>
@@ -317,8 +323,12 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 <dialog id="dPres"><form class="dlg" id="fPres"><h2 id="pTitle">Nueva presentación</h2>
   <label for="pFecha">Fecha</label><input id="pFecha" type="date" required>
   <label for="pTit">Lugar o evento (opcional)</label><input id="pTit" placeholder="Ej: Fiesta patria en la plaza">
-  <label for="pBai">Bailarines (uno por línea)</label><textarea id="pBai" rows="5"></textarea>
-  <label>Bailes a presentar</label><div id="pBailes" class="pbl"></div>
+  <label for="pBusca">Bailes a presentar</label><input id="pBusca" type="search" placeholder="🔍 Buscar baile o cuadro">
+  <div id="pBailes" class="pbl"></div>
+  <p class="hint">Marca el baile y escribe quiénes lo bailan, separados por coma. Ej: Ana, Pedro</p>
+  <label for="pMaq">Maquillaje (opcional)</label><textarea id="pMaq" rows="3" placeholder="Ej: Base clara, labios rojos, cejas marcadas"></textarea>
+  <label for="pMaqFile">Fotos de ejemplo del maquillaje</label><input id="pMaqFile" type="file" accept="image/*" multiple>
+  <div id="pMaqList" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
   <label for="pNotas">Notas o avisos</label><textarea id="pNotas" rows="4" placeholder="Ej: Llegar 18:30 con vestuario completo"></textarea>
   <div class="msg" id="pMsg" role="alert"></div>
   <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="pSave">Guardar</button></div>
@@ -326,8 +336,8 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 
 <dialog id="dPresVer"><div class="dlg">
   <span class="kick">Próxima presentación</span><h2 id="pvFecha"></h2>
-  <h3 class="vsub">Bailarines</h3><ul id="pvBai" class="pvl"></ul>
-  <h3 class="vsub">Bailes</h3><div id="pvBailes"></div>
+  <h3 class="vsub">Bailes y quiénes bailan</h3><div id="pvBailes"></div>
+  <div id="pvMaq"></div>
   <h3 class="vsub">Notas</h3><div class="text" id="pvNotas"></div>
   <div class="acts"><span id="pvAdm" style="display:flex;gap:8px"><button type="button" class="btn small" id="pvEdit">Editar</button><button type="button" class="btn small danger" id="pvDel">Eliminar</button></span><button type="button" class="btn small" data-close>Cerrar</button></div>
 </div></dialog>
@@ -351,8 +361,13 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.4.0";
+const APP_VERSION="2.5.0";
 const CHANGELOG=[
+  {v:"2.5.0",fecha:"24 de octubre de 2026",items:[
+    "El vestuario separa las prendas del conjunto (las entrega el conjunto) de las prendas propias de cada bailarín.",
+    "Las presentaciones tienen una sección Maquillaje, con texto y fotos de ejemplo.",
+    "En cada presentación, los bailarines se anotan por baile (por ejemplo, quién baila Vals y quién Marinera).",
+    "Al elegir los bailes de una presentación, la lista está agrupada por país y cuadro, con buscador."]},
   {v:"2.4.0",fecha:"24 de octubre de 2026",items:[
     "Nuevas burbujas de presentaciones en el inicio, con fecha. Al tocarlas aparecen los bailarines, los bailes (para ir directo a cada uno) y las notas.",
     "Los administradores pueden crear, editar y eliminar presentaciones desde el inicio."]},
@@ -756,7 +771,8 @@ function vestView(e,g,vsel){
   const act=x=>user&&!usingBase&&x.id?`<span class="vact"><button class="btn small" data-act="vedit" data-id="${esc(x.id)}">Editar</button><button class="btn small danger" data-act="vdel" data-id="${esc(x.id)}">Eliminar</button></span>`:"";
   const PL={cabeza:"Cabeza",cuello:"Cuello",torso:"Torso",cintura:"Cintura",mano:"Accesorios",piernas:"Piernas",pies:"Pies"};
   const th=x=>fotoOk(x.foto)?`<button type="button" class="vth" data-zoom="${esc(x.foto)}" data-cap="${esc(x.nombre)}"><img loading="lazy" src="${esc(x.foto)}" alt="${esc(x.nombre)}"></button>`:`<span class="vth no">Sin foto</span>`;
-  const rows=Object.keys(PARTS).map(p=>({p,items:pr.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi">${th(x)}<span class="vn"><b>${esc(x.nombre)}</b>${!x.baile&&e.sub?`<small>Todo el cuadro</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
+  const rowsFor=lst=>Object.keys(PARTS).map(p=>({p,items:lst.filter(x=>x._p===p)})).filter(G=>G.items.length).map(G=>`<div class="vg" data-p="${G.p}"><h4>${PL[G.p]}</h4>${G.items.map(x=>`<div class="vi">${th(x)}<span class="vn"><b>${esc(x.nombre)}</b>${!x.baile&&e.sub?`<small>Todo el cuadro</small>`:""}${act(x)}</span></div>`).join("")}</div>`).join("");
+  const propias=pr.filter(x=>x.origen==="propia");
   const vq=selV?"/"+encodeURIComponent(selV):"";
   const gb=(gg,label,ic)=>`<a class="gbtn${g===gg?" on":""}" href="#/b/${k}/v/${gg}${vq}" aria-label="${label}" ${g===gg?'aria-current="page"':""}>${ic}</a>`;
   let admin="";
@@ -770,7 +786,7 @@ function vestView(e,g,vsel){
   <div class="gsel"><div class="gl"><span>Mujer</span>${gb("m","Vestuario de mujer","♀")}</div><div class="gl"><span>Hombre</span>${gb("h","Vestuario de hombre","♂")}</div></div>
   ${vars.length?`<nav class="tabs sub" style="--c:var(--teal)" aria-label="Variantes de vestuario">${vars.map(v=>`<a href="#/b/${k}/v/${g}/${encodeURIComponent(v)}" ${v===selV?'aria-current="page" class="on"':""}>${esc(v)}</a>`).join("")}</nav>`:""}
   ${admin}
-  ${pr.length?`<div class="vfig" id="vfig" data-g="${g}"><div class="vfl"><svg class="sil" viewBox="0 0 100 240" aria-hidden="true">${SIL[g]}</svg></div><div class="vfr">${rows}</div><svg class="vlines" id="vlines" aria-hidden="true"></svg></div>`:`<div class="empty">${g==="m"?"Aún no hay prendas de mujer para este baile.":"Vestuario pendiente de cargar."}</div>`}
+  ${pr.length?`<div class="vfig" id="vfig" data-g="${g}"><div class="vfl"><svg class="sil" viewBox="0 0 100 240" aria-hidden="true">${SIL[g]}</svg></div><div class="vfr">${rowsFor(pr.filter(x=>x.origen!=="propia"))}${propias.length?`<h3 class="vsub">Prendas propias de cada bailarín</h3>`+rowsFor(propias):""}</div><svg class="vlines" id="vlines" aria-hidden="true"></svg></div>`:`<div class="empty">${g==="m"?"Aún no hay prendas de mujer para este baile.":"Vestuario pendiente de cargar."}</div>`}
   ${exH}`;
 }
 function drawLines(){
@@ -905,6 +921,7 @@ function openVest(x,padreKey,g,sub,vari){
   $("vGen").value=(x?x.genero:g)==="m"?"m":"h";
   $("vAlc").value=x?(x.baile||""):(c.subs.includes(sub)?sub:"");
   $("vParte").value=x?(x.parte||""):"";
+  $("vOri").value=x?(x.origen||"conjunto"):"conjunto";
   $("vVar").value=x?(x.variante||""):(vari||"");
   $("vActual").textContent=vFotoActual?"Esta prenda ya tiene foto. Elige otra solo si quieres reemplazarla.":"Sin foto todavía.";
   $("vMsg").textContent="";$("vProg").hidden=true;$("vSave").disabled=false;
@@ -924,7 +941,7 @@ $("fVest").onsubmit=async e=>{
     }
     let baile=$("vAlc").value;
     if(baile==="__new"){baile=$("vNuevo").value.trim();if(!baile)throw new Error("escribe el nombre del baile nuevo")}
-    const data={padre:vPadre.name,baile,variante:$("vVar").value.trim(),genero:$("vGen").value,nombre:$("vNom").value.trim(),parte:$("vParte").value,foto};
+    const data={padre:vPadre.name,baile,variante:$("vVar").value.trim(),genero:$("vGen").value,nombre:$("vNom").value.trim(),parte:$("vParte").value,origen:$("vOri").value,foto};
     if(vEdit)await updateDoc(doc(db,"vestuario",vEdit),data);
     else await addDoc(collection(db,"vestuario"),data);
     $("dVest").close();
@@ -942,7 +959,7 @@ async function importBase(btn){
   if(!confirm(`Se guardarán ${BASE_VEST.length} prendas del vestuario base en la app para que puedas editarlas. ¿Continuar?`))return;
   btn.disabled=true;btn.textContent="Guardando…";
   try{
-    await Promise.all(BASE_VEST.map(x=>addDoc(collection(db,"vestuario"),{padre:x.padre,baile:x.baile,genero:x.genero,nombre:x.nombre,foto:x.foto,parte:"",variante:x.variante||""})));
+    await Promise.all(BASE_VEST.map(x=>addDoc(collection(db,"vestuario"),{padre:x.padre,baile:x.baile,genero:x.genero,nombre:x.nombre,foto:x.foto,parte:"",origen:"conjunto",variante:x.variante||""})));
   }catch(err){alert("No se pudo guardar: "+err.message);btn.disabled=false;btn.textContent="Guardar vestuario base en la app"}
 }
 
@@ -1010,7 +1027,7 @@ $("fConf").onsubmit=async ev=>{
 };
 
 /* ---------- Presentaciones (burbujas del inicio) ---------- */
-let presList=[],presEditId=null,pvId=null;
+let presList=[],presEditId=null,pvId=null,pMaqFotos=[],pMaqPend=[];
 const fmtFecha=f=>new Date(f+"T12:00:00").toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short"});
 function presHtml(){
   const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
@@ -1021,8 +1038,9 @@ function presHtml(){
 function openPresView(p){
   pvId=p.id;
   $("pvFecha").textContent=fmtFecha(p.fecha)+(p.titulo?" · "+p.titulo:"");
-  $("pvBai").innerHTML=(p.bailarines||[]).map(b=>`<li>${esc(b)}</li>`).join("")||`<li class="hint">Aún no hay bailarines anotados.</li>`;
-  $("pvBailes").innerHTML=(p.bailes||[]).map(b=>`<a class="row" style="--c:var(--teal)" href="#/b/${encodeURIComponent(b.id)}"><span><b>${esc(b.nombre)}</b></span><span class="go" aria-hidden="true">›</span></a>`).join("")||`<p class="hint">Sin bailes asignados.</p>`;
+  $("pvBailes").innerHTML=(p.bailes||[]).map(b=>`<div class="pvb"><a class="row" style="--c:var(--teal)" href="#/b/${encodeURIComponent(b.id)}"><span><b>${esc(b.nombre)}</b>${(b.bailarines||[]).length?`<small>Bailan: ${esc(b.bailarines.join(", "))}</small>`:"<small>Sin bailarines anotados</small>"}</span><span class="go" aria-hidden="true">›</span></a></div>`).join("")||`<p class="hint">Sin bailes asignados.</p>`;
+  const mq=p.maquillaje||{},mf=mq.fotos||[];
+  $("pvMaq").innerHTML=(mq.texto||mf.length)?`<h3 class="vsub">Maquillaje</h3>${mq.texto?`<div class="text">${esc(mq.texto)}</div>`:""}${mf.length?`<div class="photos" style="margin-top:12px">${mf.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"Maquillaje")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="Maquillaje"></button>`).join("")}</div>`:""}`:"";
   $("pvNotas").textContent=p.notas||"Sin notas.";
   $("pvAdm").style.display=user?"flex":"none";
   $("dPresVer").showModal();
@@ -1030,28 +1048,55 @@ function openPresView(p){
 $("dPresVer").addEventListener("click",e=>{if(e.target.closest("a"))$("dPresVer").close()});
 $("pvEdit").onclick=()=>{$("dPresVer").close();openPresForm(presList.find(x=>x.id===pvId))};
 $("pvDel").onclick=async()=>{if(!confirm("¿Eliminar esta presentación?"))return;try{await deleteDoc(doc(db,"presentaciones",pvId));$("dPresVer").close()}catch(err){alert("No se pudo eliminar: "+err.message)}};
+function renderPMaq(){
+  $("pMaqList").innerHTML=pMaqFotos.map((f,i)=>`<span class="chip">Foto ${i+1} <button type="button" class="x" data-mqx="${i}" aria-label="Quitar foto ${i+1}">✕</button></span>`).join("")+pMaqPend.map((f,i)=>`<span class="chip">Nueva: ${esc(f.name)} <button type="button" class="x" data-mqp="${i}" aria-label="Quitar">✕</button></span>`).join("");
+}
+$("pMaqList").addEventListener("click",e=>{const x=e.target.closest("[data-mqx],[data-mqp]");if(!x)return;if(x.dataset.mqx!==undefined)pMaqFotos.splice(+x.dataset.mqx,1);else pMaqPend.splice(+x.dataset.mqp,1);renderPMaq()});
+$("pMaqFile").onchange=e=>{for(const f of e.target.files)pMaqPend.push(f);e.target.value="";renderPMaq()};
+$("pBusca").oninput=()=>{
+  const q=norm($("pBusca").value);
+  document.querySelectorAll("#pBailes .pitem").forEach(i=>{i.hidden=!!q&&!i.dataset.q.includes(q)});
+  document.querySelectorAll("#pBailes .pgrp").forEach(g=>{g.hidden=!!q&&!g.querySelector(".pitem:not([hidden])")});
+};
 function openPresForm(p){
-  presEditId=p?p.id:null;
-  $("fPres").reset();$("pMsg").textContent="";
+  presEditId=p?p.id:null;pMaqPend=[];pMaqFotos=[...((p&&p.maquillaje&&p.maquillaje.fotos)||[])];
+  $("fPres").reset();$("pMsg").textContent="";$("pBusca").value="";
   $("pTitle").textContent=p?"Editar presentación":"Nueva presentación";
   $("pFecha").value=p?p.fecha:"";
   $("pTit").value=p?(p.titulo||""):"";
-  $("pBai").value=p?(p.bailarines||[]).join("\n"):"";
+  $("pMaq").value=p&&p.maquillaje?(p.maquillaje.texto||""):"";
   $("pNotas").value=p?(p.notas||""):"";
-  const sel=new Set(p?(p.bailes||[]).map(b=>b.id):[]);
-  $("pBailes").innerHTML=entries().sort(byName).map(e=>`<label class="ck"><input type="checkbox" value="${esc(e.id)}" data-nm="${esc(e.nombre)}"${sel.has(e.id)?" checked":""}><span>${esc(e.nombre)} <small>${esc(e.padre)}</small></span></label>`).join("");
+  const pre=new Map((p&&p.bailes?p.bailes:[]).map(b=>[b.id,(b.bailarines||[]).join(", ")]));
+  const all=entries().map(e=>({...e,pn:e.pk?PAISES[e.pk][0]:"Otros"}));
+  all.sort((a,b)=>a.pn.localeCompare(b.pn,"es")||a.padre.localeCompare(b.padre,"es")||String(a.nombre).localeCompare(String(b.nombre),"es"));
+  let html="",last="";
+  for(const e of all){
+    const g=e.pn+" · "+e.padre;
+    if(g!==last){if(last)html+="</div>";html+=`<div class="pgrp"><h4 class="pgh">${esc(g)}</h4>`;last=g}
+    html+=`<div class="pitem" data-q="${esc(norm(e.nombre+" "+e.padre+" "+e.pn))}"><label class="ck"><input type="checkbox" value="${esc(e.id)}" data-nm="${esc(e.nombre)}"${pre.has(e.id)?" checked":""}><span>${esc(e.nombre)}</span></label><input class="pdn" placeholder="Bailan: ej. Ana, Pedro" value="${esc(pre.get(e.id)||"")}"></div>`;
+  }
+  if(last)html+="</div>";
+  $("pBailes").innerHTML=html||`<p class="hint">No hay bailes todavía.</p>`;
+  renderPMaq();
   $("dPres").showModal();
 }
 $("fPres").onsubmit=async ev=>{
   ev.preventDefault();const msg=$("pMsg");msg.textContent="";$("pSave").disabled=true;
   try{
     const fecha=$("pFecha").value;if(!fecha)throw new Error("elige la fecha");
-    const bailes=[...$("pBailes").querySelectorAll("input:checked")].map(i=>({id:i.value,nombre:i.dataset.nm}));
-    const data={fecha,titulo:$("pTit").value.trim(),bailarines:$("pBai").value.split("\n").map(x=>x.trim()).filter(Boolean),bailes,notas:$("pNotas").value.trim()};
+    const bailes=[...$("pBailes").querySelectorAll(".pitem")].filter(i=>i.querySelector("input[type=checkbox]").checked).map(i=>{const c=i.querySelector("input[type=checkbox]");return {id:c.value,nombre:c.dataset.nm,bailarines:i.querySelector(".pdn").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean)}});
+    const fotos=[...pMaqFotos];
+    for(let i=0;i<pMaqPend.length;i++){
+      msg.style.color="var(--mute)";msg.textContent=`Subiendo foto ${i+1} de ${pMaqPend.length}…`;
+      const r=await uploadFile(await shrink(pMaqPend[i]),()=>{});
+      fotos.push({url:r.secure_url,titulo:""});
+    }
+    msg.style.color="";
+    const data={fecha,titulo:$("pTit").value.trim(),bailes,maquillaje:{texto:$("pMaq").value.trim(),fotos},notas:$("pNotas").value.trim()};
     if(presEditId)await updateDoc(doc(db,"presentaciones",presEditId),data);
     else await addDoc(collection(db,"presentaciones"),data);
     $("dPres").close();
-  }catch(err){msg.textContent="No se pudo guardar: "+err.message}
+  }catch(err){msg.style.color="";msg.textContent="No se pudo guardar: "+err.message}
   finally{$("pSave").disabled=false}
 };
 
