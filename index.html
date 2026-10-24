@@ -672,7 +672,7 @@ function detailView(e){
   const blk=(h,inner)=>`<section class="blk"><h3>${h}</h3>${inner}</section>`;
   const vidOf=arr=>arr.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Video "+(i+1))}</p><video src="${esc(safe(x.url))}#t=0.1" controls playsinline preload="metadata"></video></div>`).join("");
   let vidH="";
-  if(norm(e.padre)==="diablada"){const cs=[...(b.carpetas||[])];const grp=[...cs.map(c=>[c,vids.filter(x=>x.carpeta===c)]),["Sin carpeta",vids.filter(x=>!x.carpeta||!cs.includes(x.carpeta))]].filter(g=>g[1].length);vidH=grp.length?`<div class="stack">${grp.map(([c,l])=>blk(esc(cs.length?c:"Videos"),vidOf(l))).join("")}</div>`:""}
+  if(/diablada/.test(norm([e.padre,e.sub,e.nombre].join(" ")))){const cs=[...(b.carpetas||[])];const grp=[...cs.map(c=>[c,vids.filter(x=>x.carpeta===c)]),["Sin carpeta",vids.filter(x=>!x.carpeta||!cs.includes(x.carpeta))]].filter(g=>g[1].length);vidH=grp.length?`<div class="stack">${grp.map(([c,l])=>blk(esc(cs.length?c:"Videos"),vidOf(l))).join("")}</div>`:""}
   else{const pres=vids.filter(x=>x.sec==="presentacion"),ens=vids.filter(x=>x.sec!=="presentacion");vidH=(pres.length||ens.length)?`<div class="stack">${pres.length?blk("Videos de presentación",vidOf(pres)):""}${ens.length?blk("Videos de ensayo",vidOf(ens)):""}</div>`:""}
   const audH=auds.length?blk("Audio",auds.map((x,i)=>`<div class="vid"><p>${esc(x.titulo||"Audio "+(i+1))}</p><audio src="${esc(safe(x.url))}" controls preload="metadata"></audio></div>`).join("")):"";
   const picH=pics.length?blk("Fotos",`<div class="photos">${pics.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||e.nombre)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div>`):"";
@@ -980,10 +980,10 @@ $("lugP").innerHTML=`<option value="">Automática (según el cuadro)</option>`+P
 function fillLugZ(){const p=$("lugP").value,Z=ZONAS[p];$("lugZ").innerHTML=`<option value="">${p?(Z?"Sin zona":"—"):"Automática"}</option>`+(Z?Z.map(z=>`<option value="${z.k}">${esc(z.n)}</option>`).join(""):"");$("lugZ").disabled=!p||!Z}
 $("lugP").onchange=fillLugZ;
 let fCarp=[];
-const carpOn=()=>norm(parseCuadro($("cuadro").value).padre)==="diablada";
+const carpOn=()=>/diablada/.test(norm([$("cuadro").value,$("subtipo").value,$("nombre").value].join(" ")));
 function renderCarp(){$("carpList").innerHTML=fCarp.map(c=>`<span class="chip">${esc(c)}</span>`).join("")||`<p class="hint">Aún no hay carpetas.</p>`}
 function updCarp(){$("carpBox").hidden=!carpOn();renderCarp()}
-$("cuadro").addEventListener("input",()=>{updCarp();renderFm()});
+["cuadro","subtipo","nombre"].forEach(id=>$(id).addEventListener("input",()=>{updCarp();renderFm()}));
 $("carpAdd").onclick=()=>{const n=$("carpNew").value.trim();if(n&&!fCarp.includes(n))fCarp.push(n);$("carpNew").value="";renderCarp();renderFm()};
 function openForm(b,pre){
   fCarp=b&&Array.isArray(b.carpetas)?[...b.carpetas]:[];
