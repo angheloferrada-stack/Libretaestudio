@@ -230,6 +230,14 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .pdn{font-size:.85rem!important;padding:7px 10px!important;margin:0 0 6px!important}
 .pgh{font:700 .78rem/1 "DM Sans",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:14px 0 4px}
 .pvb{margin-bottom:8px}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
+.pbaile{display:inline-block;background:var(--ink);color:#fff;font:700 1rem "DM Sans",sans-serif;padding:8px 14px;border-radius:8px}
+.pcols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ptag{display:inline-block;background:var(--ink);color:#fff;font:600 .78rem "DM Sans",sans-serif;padding:5px 9px;border-radius:6px}
+.pcol ol{margin:8px 0 0;padding-left:22px;font-size:.92rem}
+.pcol li{margin:3px 0}
+.pdr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pdr input{font-size:.85rem!important;padding:7px 10px!important;margin:0!important}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -334,7 +342,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <label for="pTit">Lugar o evento (opcional)</label><input id="pTit" placeholder="Ej: Fiesta patria en la plaza">
   <label for="pBusca">Bailes a presentar</label><input id="pBusca" type="search" placeholder="🔍 Buscar baile o cuadro">
   <div id="pBailes" class="pbl"></div>
-  <p class="hint">Marca el baile y escribe quiénes lo bailan, separados por coma. Ej: Ana, Pedro</p>
+  <p class="hint">Marca el baile y escribe quiénes lo bailan en cada columna, separados por coma. Ej: Ana, Maite</p>
   <label for="pMaq">Maquillaje (opcional)</label><textarea id="pMaq" rows="3" placeholder="Ej: Base clara, labios rojos, cejas marcadas"></textarea>
   <label for="pMaqFile">Fotos de ejemplo del maquillaje</label><input id="pMaqFile" type="file" accept="image/*" multiple>
   <div id="pMaqList" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
@@ -370,8 +378,11 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.5.1";
+const APP_VERSION="2.6.0";
 const CHANGELOG=[
+  {v:"2.6.0",fecha:"26 de octubre de 2026",items:[
+    "En cada presentación, los bailarines se separan en dos listas por baile: bailarinas mujeres y bailarines hombres, numeradas.",
+    "Las presentaciones creadas antes muestran sus bailarines en una sola lista; edítalas para separarlos por género."]},
   {v:"2.5.1",fecha:"24 de octubre de 2026",items:[
     "Las prendas propias de cada bailarín aparecen en su parte del cuerpo, en color magenta y con la nota (propia del bailarín).",
     "Al agregar una prenda, se puede tocar el dibujo para elegir la parte del cuerpo donde va (cabeza, cuello, torso, cintura, accesorios, piernas o pies)."]},
@@ -1062,7 +1073,11 @@ function presHtml(){
 function openPresView(p){
   pvId=p.id;
   $("pvFecha").textContent=fmtFecha(p.fecha)+(p.titulo?" · "+p.titulo:"");
-  $("pvBailes").innerHTML=(p.bailes||[]).map(b=>`<div class="pvb"><a class="row" style="--c:var(--teal)" href="#/b/${encodeURIComponent(b.id)}"><span><b>${esc(b.nombre)}</b>${(b.bailarines||[]).length?`<small>Bailan: ${esc(b.bailarines.join(", "))}</small>`:"<small>Sin bailarines anotados</small>"}</span><span class="go" aria-hidden="true">›</span></a></div>`).join("")||`<p class="hint">Sin bailes asignados.</p>`;
+  const colP=(t,l)=>`<div class="pcol"><span class="ptag">${t}</span><ol>${l.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>—</li>"}</ol></div>`;
+  $("pvBailes").innerHTML=(p.bailes||[]).map(b=>{
+    const M=b.mujeres||[],H=b.hombres||b.bailarines||[];
+    return `<div class="pcard"><a class="pbaile" href="#/b/${encodeURIComponent(b.id)}">${esc(b.nombre)} ›</a><div class="pcols">${colP("Bailarinas mujeres",M)}${colP("Bailarines hombres",H)}</div></div>`;
+  }).join("")||`<p class="hint">Sin bailes asignados.</p>`;
   const mq=p.maquillaje||{},mf=mq.fotos||[];
   $("pvMaq").innerHTML=(mq.texto||mf.length)?`<h3 class="vsub">Maquillaje</h3>${mq.texto?`<div class="text">${esc(mq.texto)}</div>`:""}${mf.length?`<div class="photos" style="margin-top:12px">${mf.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"Maquillaje")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="Maquillaje"></button>`).join("")}</div>`:""}`:"";
   $("pvNotas").textContent=p.notas||"Sin notas.";
@@ -1090,14 +1105,15 @@ function openPresForm(p){
   $("pTit").value=p?(p.titulo||""):"";
   $("pMaq").value=p&&p.maquillaje?(p.maquillaje.texto||""):"";
   $("pNotas").value=p?(p.notas||""):"";
-  const pre=new Map((p&&p.bailes?p.bailes:[]).map(b=>[b.id,(b.bailarines||[]).join(", ")]));
+  const pre=new Map((p&&p.bailes?p.bailes:[]).map(b=>[b.id,{m:(b.mujeres||[]).join(", "),h:(b.hombres||b.bailarines||[]).join(", ")}]));
   const all=entries().map(e=>({...e,pn:e.pk?PAISES[e.pk][0]:"Otros"}));
   all.sort((a,b)=>a.pn.localeCompare(b.pn,"es")||a.padre.localeCompare(b.padre,"es")||String(a.nombre).localeCompare(String(b.nombre),"es"));
   let html="",last="";
   for(const e of all){
     const g=e.pn+" · "+e.padre;
     if(g!==last){if(last)html+="</div>";html+=`<div class="pgrp"><h4 class="pgh">${esc(g)}</h4>`;last=g}
-    html+=`<div class="pitem" data-q="${esc(norm(e.nombre+" "+e.padre+" "+e.pn))}"><label class="ck"><input type="checkbox" value="${esc(e.id)}" data-nm="${esc(e.nombre)}"${pre.has(e.id)?" checked":""}><span>${esc(e.nombre)}</span></label><input class="pdn" placeholder="Bailan: ej. Ana, Pedro" value="${esc(pre.get(e.id)||"")}"></div>`;
+    const q=pre.get(e.id)||{m:"",h:""};
+    html+=`<div class="pitem" data-q="${esc(norm(e.nombre+" "+e.padre+" "+e.pn))}"><label class="ck"><input type="checkbox" value="${esc(e.id)}" data-nm="${esc(e.nombre)}"${pre.has(e.id)?" checked":""}><span>${esc(e.nombre)}</span></label><div class="pdr"><input class="pdm" placeholder="Mujeres: Ana, Maite" value="${esc(q.m)}" aria-label="Bailarinas mujeres de ${esc(e.nombre)}"><input class="pdh" placeholder="Hombres: Pedro, Nico" value="${esc(q.h)}" aria-label="Bailarines hombres de ${esc(e.nombre)}"></div></div>`;
   }
   if(last)html+="</div>";
   $("pBailes").innerHTML=html||`<p class="hint">No hay bailes todavía.</p>`;
@@ -1108,7 +1124,7 @@ $("fPres").onsubmit=async ev=>{
   ev.preventDefault();const msg=$("pMsg");msg.textContent="";$("pSave").disabled=true;
   try{
     const fecha=$("pFecha").value;if(!fecha)throw new Error("elige la fecha");
-    const bailes=[...$("pBailes").querySelectorAll(".pitem")].filter(i=>i.querySelector("input[type=checkbox]").checked).map(i=>{const c=i.querySelector("input[type=checkbox]");return {id:c.value,nombre:c.dataset.nm,bailarines:i.querySelector(".pdn").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean)}});
+    const bailes=[...$("pBailes").querySelectorAll(".pitem")].filter(i=>i.querySelector("input[type=checkbox]").checked).map(i=>{const c=i.querySelector("input[type=checkbox]");const sp=v=>v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);return {id:c.value,nombre:c.dataset.nm,mujeres:sp(i.querySelector(".pdm").value),hombres:sp(i.querySelector(".pdh").value)}});
     const fotos=[...pMaqFotos];
     for(let i=0;i<pMaqPend.length;i++){
       msg.style.color="var(--mute)";msg.textContent=`Subiendo foto ${i+1} de ${pMaqPend.length}…`;
