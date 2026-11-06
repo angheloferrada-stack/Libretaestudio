@@ -243,6 +243,12 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .pcol ol{margin:8px 0 0;padding-left:22px;font-size:.92rem}
 .pcol li{margin:3px 0}
 .pdr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fsec{border:1.5px dashed #C3CBD0;border-radius:14px;padding:6px 12px 12px;margin-top:14px;background:rgba(255,255,255,.55)}
+.fotlist{display:grid;gap:8px;margin-top:8px}
+.fotrow{display:grid;grid-template-columns:56px 1fr 34px;gap:8px;align-items:center}
+.fotrow img,.fotrow .ph{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#E7ECEE;display:grid;place-items:center;font-size:.7rem;color:var(--mute)}
+.fotrow input{margin:0!important}
+.fotrow .x{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:#fff;cursor:pointer}
 .pdr input{font-size:.85rem!important;padding:7px 10px!important;margin:0!important}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -349,9 +355,14 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <label for="pBusca">Bailes a presentar</label><input id="pBusca" type="search" placeholder="🔍 Buscar baile o cuadro">
   <div id="pBailes" class="pbl"></div>
   <p class="hint">Toca un país para desplegar sus cuadros y bailes. Marca el baile y escribe quiénes lo bailan en cada columna, separados por coma. Ej: Ana, Maite</p>
-  <label for="pMaq">Maquillaje (opcional)</label><textarea id="pMaq" rows="3" placeholder="Ej: Base clara, labios rojos, cejas marcadas"></textarea>
-  <label for="pMaqFile">Fotos de ejemplo del maquillaje</label><input id="pMaqFile" type="file" accept="image/*" multiple>
-  <div id="pMaqList" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+  <div class="fsec"><h3 class="vsub">Maquillaje</h3>
+    <label for="pMaq">Descripción (opcional)</label><textarea id="pMaq" rows="2" placeholder="Ej: Base clara, labios rojos, cejas marcadas"></textarea>
+    <label for="pMaqFile">Fotos de ejemplo</label><input id="pMaqFile" type="file" accept="image/*" multiple>
+    <div id="pMaqList" class="fotlist"></div></div>
+  <div class="fsec"><h3 class="vsub">Peinados</h3>
+    <label for="pPei">Descripción (opcional)</label><textarea id="pPei" rows="2" placeholder="Ej: Moño bajo con trenzas"></textarea>
+    <label for="pPeiFile">Fotos de ejemplo</label><input id="pPeiFile" type="file" accept="image/*" multiple>
+    <div id="pPeiList" class="fotlist"></div></div>
   <label for="pNotas">Notas o avisos</label><textarea id="pNotas" rows="4" placeholder="Ej: Llegar 18:30 con vestuario completo"></textarea>
   <div class="msg" id="pMsg" role="alert"></div>
   <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="pSave">Guardar</button></div>
@@ -384,8 +395,11 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="2.6.1";
+const APP_VERSION="2.7.0";
 const CHANGELOG=[
+  {v:"2.7.0",fecha:"6 de noviembre de 2026",items:[
+    "Las presentaciones tienen una sección Peinados, con descripción y fotos de ejemplo, igual que Maquillaje.",
+    "Cada foto de maquillaje y peinados puede tener su título (por ejemplo: Base y labios)."]},
   {v:"2.6.1",fecha:"26 de octubre de 2026",items:[
     "Al elegir bailes para una presentación, la lista se despliega por país y luego por cuadro. Cada país muestra cuántos bailes elegiste.",
     "El buscador abre automáticamente las secciones con resultados."]},
@@ -1071,7 +1085,9 @@ $("fConf").onsubmit=async ev=>{
 };
 
 /* ---------- Presentaciones (burbujas del inicio) ---------- */
-let presList=[],presEditId=null,pvId=null,pMaqFotos=[],pMaqPend=[];
+let presList=[],presEditId=null,pvId=null;
+const FOT={maq:{fotos:[],pend:[]},pei:{fotos:[],pend:[]}};
+const IDS={maq:"pMaq",pei:"pPei"},TIT={maq:"Maquillaje",pei:"Peinados"},CAMPO={maq:"maquillaje",pei:"peinados"};
 const fmtFecha=f=>new Date(f+"T12:00:00").toLocaleDateString("es-CL",{weekday:"short",day:"numeric",month:"short"});
 function presHtml(){
   const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
@@ -1079,6 +1095,7 @@ function presHtml(){
   const add=user?`<div class="vtools"><button class="btn small acc" data-act="presnew">+ Presentación</button></div>`:"";
   return `<div class="presbar">${up.map(p=>`<button type="button" class="pres" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}</b><span>${esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}`;
 }
+const fotSec=(t,o)=>o&&(o.texto||(o.fotos||[]).length)?`<h3 class="vsub">${t}</h3>${o.texto?`<div class="text">${esc(o.texto)}</div>`:""}${(o.fotos||[]).length?`<div class="photos" style="margin-top:12px">${o.fotos.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||t)}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||t)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div>`:""}`:"";
 function openPresView(p){
   pvId=p.id;
   $("pvFecha").textContent=fmtFecha(p.fecha)+(p.titulo?" · "+p.titulo:"");
@@ -1087,8 +1104,7 @@ function openPresView(p){
     const M=b.mujeres||[],H=b.hombres||b.bailarines||[];
     return `<div class="pcard"><a class="pbaile" href="#/b/${encodeURIComponent(b.id)}">${esc(b.nombre)} ›</a><div class="pcols">${colP("Bailarinas mujeres",M)}${colP("Bailarines hombres",H)}</div></div>`;
   }).join("")||`<p class="hint">Sin bailes asignados.</p>`;
-  const mq=p.maquillaje||{},mf=mq.fotos||[];
-  $("pvMaq").innerHTML=(mq.texto||mf.length)?`<h3 class="vsub">Maquillaje</h3>${mq.texto?`<div class="text">${esc(mq.texto)}</div>`:""}${mf.length?`<div class="photos" style="margin-top:12px">${mf.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||"Maquillaje")}"><img loading="lazy" src="${esc(safe(x.url))}" alt="Maquillaje"></button>`).join("")}</div>`:""}`:"";
+  $("pvMaq").innerHTML=fotSec("Maquillaje",p.maquillaje)+fotSec("Peinados",p.peinados);
   $("pvNotas").textContent=p.notas||"Sin notas.";
   $("pvAdm").style.display=user?"flex":"none";
   $("dPresVer").showModal();
@@ -1096,24 +1112,35 @@ function openPresView(p){
 $("dPresVer").addEventListener("click",e=>{if(e.target.closest("a"))$("dPresVer").close()});
 $("pvEdit").onclick=()=>{$("dPresVer").close();openPresForm(presList.find(x=>x.id===pvId))};
 $("pvDel").onclick=async()=>{if(!confirm("¿Eliminar esta presentación?"))return;try{await deleteDoc(doc(db,"presentaciones",pvId));$("dPresVer").close()}catch(err){alert("No se pudo eliminar: "+err.message)}};
-function renderPMaq(){
-  $("pMaqList").innerHTML=pMaqFotos.map((f,i)=>`<span class="chip">Foto ${i+1} <button type="button" class="x" data-mqx="${i}" aria-label="Quitar foto ${i+1}">✕</button></span>`).join("")+pMaqPend.map((f,i)=>`<span class="chip">Nueva: ${esc(f.name)} <button type="button" class="x" data-mqp="${i}" aria-label="Quitar">✕</button></span>`).join("");
+/* Fotos de maquillaje y peinados: cada foto tiene su título */
+function renderFot(k){
+  const st=FOT[k],L=$(IDS[k]+"List");
+  L.innerHTML=st.fotos.map((f,i)=>`<div class="fotrow"><img src="${esc(safe(f.url))}" alt=""><input data-ft="${k}|f|${i}" value="${esc(f.titulo||"")}" placeholder="Título de la foto (ej: Base y labios)" aria-label="Título de la foto ${i+1}"><button type="button" class="x" data-fx="${k}|f|${i}" aria-label="Quitar foto ${i+1}">✕</button></div>`).join("")
+    +st.pend.map((f,i)=>`<div class="fotrow"><div class="ph">Nueva</div><input data-ft="${k}|p|${i}" value="${esc(f.titulo||"")}" placeholder="Título de la foto" aria-label="Título de la nueva foto ${i+1}"><button type="button" class="x" data-fx="${k}|p|${i}" aria-label="Quitar">✕</button></div>`).join("");
 }
-$("pMaqList").addEventListener("click",e=>{const x=e.target.closest("[data-mqx],[data-mqp]");if(!x)return;if(x.dataset.mqx!==undefined)pMaqFotos.splice(+x.dataset.mqx,1);else pMaqPend.splice(+x.dataset.mqp,1);renderPMaq()});
-$("pMaqFile").onchange=e=>{for(const f of e.target.files)pMaqPend.push(f);e.target.value="";renderPMaq()};
+["maq","pei"].forEach(k=>{
+  $(IDS[k]+"List").addEventListener("input",e=>{const t=e.target.dataset.ft;if(!t)return;const[kk,w,i]=t.split("|");(w==="f"?FOT[kk].fotos:FOT[kk].pend)[i].titulo=e.target.value});
+  $(IDS[k]+"List").addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!x)return;const[kk,w,i]=x.dataset.fx.split("|");(w==="f"?FOT[kk].fotos:FOT[kk].pend).splice(+i,1);renderFot(kk)});
+  $(IDS[k]+"File").onchange=e=>{for(const f of e.target.files)FOT[k].pend.push(Object.assign(f,{titulo:""}));e.target.value="";renderFot(k)};
+});
 $("pBusca").oninput=()=>{
   const q=norm($("pBusca").value);
   document.querySelectorAll("#pBailes .pitem").forEach(i=>{i.hidden=!!q&&!i.dataset.q.includes(q)});
   document.querySelectorAll("#pBailes .pdet").forEach(d=>{const any=!!d.querySelector(".pitem:not([hidden])");d.hidden=!!q&&!any;d.open=!!q});
 };
 function openPresForm(p){
-  presEditId=p?p.id:null;pMaqPend=[];pMaqFotos=[...((p&&p.maquillaje&&p.maquillaje.fotos)||[])];
+  presEditId=p?p.id:null;
   $("fPres").reset();$("pMsg").textContent="";$("pBusca").value="";
   $("pTitle").textContent=p?"Editar presentación":"Nueva presentación";
   $("pFecha").value=p?p.fecha:"";
   $("pTit").value=p?(p.titulo||""):"";
-  $("pMaq").value=p&&p.maquillaje?(p.maquillaje.texto||""):"";
   $("pNotas").value=p?(p.notas||""):"";
+  for(const k of ["maq","pei"]){
+    const o=(p&&p[CAMPO[k]])||{};
+    FOT[k]={fotos:[...(o.fotos||[])],pend:[]};
+    $(IDS[k]).value=o.texto||"";
+    renderFot(k);
+  }
   const pre=new Map((p&&p.bailes?p.bailes:[]).map(b=>[b.id,{m:(b.mujeres||[]).join(", "),h:(b.hombres||b.bailarines||[]).join(", ")}]));
   const all=entries().map(e=>({...e,pn:e.pk?PAISES[e.pk][0]:"Otros"}));
   all.sort((a,b)=>a.pn.localeCompare(b.pn,"es")||a.padre.localeCompare(b.padre,"es")||String(a.nombre).localeCompare(String(b.nombre),"es"));
@@ -1129,7 +1156,6 @@ function openPresForm(p){
   }
   closeC();
   $("pBailes").innerHTML=html||`<p class="hint">No hay bailes todavía.</p>`;
-  renderPMaq();
   $("dPres").showModal();
 }
 $("fPres").onsubmit=async ev=>{
@@ -1137,14 +1163,18 @@ $("fPres").onsubmit=async ev=>{
   try{
     const fecha=$("pFecha").value;if(!fecha)throw new Error("elige la fecha");
     const bailes=[...$("pBailes").querySelectorAll(".pitem")].filter(i=>i.querySelector("input[type=checkbox]").checked).map(i=>{const c=i.querySelector("input[type=checkbox]");const sp=v=>v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);return {id:c.value,nombre:c.dataset.nm,mujeres:sp(i.querySelector(".pdm").value),hombres:sp(i.querySelector(".pdh").value)}});
-    const fotos=[...pMaqFotos];
-    for(let i=0;i<pMaqPend.length;i++){
-      msg.style.color="var(--mute)";msg.textContent=`Subiendo foto ${i+1} de ${pMaqPend.length}…`;
-      const r=await uploadFile(await shrink(pMaqPend[i]),()=>{});
-      fotos.push({url:r.secure_url,titulo:""});
+    const data={fecha,titulo:$("pTit").value.trim(),bailes,notas:$("pNotas").value.trim()};
+    for(const k of ["maq","pei"]){
+      const fotos=[...FOT[k].fotos];
+      for(let i=0;i<FOT[k].pend.length;i++){
+        const f=FOT[k].pend[i];
+        msg.style.color="var(--mute)";msg.textContent=`Subiendo foto de ${TIT[k].toLowerCase()} ${i+1} de ${FOT[k].pend.length}…`;
+        const r=await uploadFile(await shrink(f),()=>{});
+        fotos.push({url:r.secure_url,titulo:(f.titulo||"").trim()});
+      }
+      data[CAMPO[k]]={texto:$(IDS[k]).value.trim(),fotos};
     }
     msg.style.color="";
-    const data={fecha,titulo:$("pTit").value.trim(),bailes,maquillaje:{texto:$("pMaq").value.trim(),fotos},notas:$("pNotas").value.trim()};
     if(presEditId)await updateDoc(doc(db,"presentaciones",presEditId),data);
     else await addDoc(collection(db,"presentaciones"),data);
     $("dPres").close();
