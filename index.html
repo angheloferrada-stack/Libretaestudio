@@ -399,8 +399,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.0.0";
+const APP_VERSION="3.1.0";
 const CHANGELOG=[
+  {v:"3.1.0",fecha:"11 de noviembre de 2026",items:["Los archivos se guardan en Drive ordenados por carpetas: País → Zona o estado (ej. México → Veracruz). Las fotos de vestuario y presentaciones van en sus propias carpetas."]},
   {v:"3.0.0",fecha:"9 de noviembre de 2026",items:["Subida a Google Drive de la cuenta compartida: se conecta una vez (botón ☁️ Drive) y todos los editores suben a esa cuenta.","Audios de Drive se reproducen dentro de la app."]},
   {v:"2.9.0",fecha:"9 de noviembre de 2026",items:["Los videos, fotos y audios ahora se suben a Google Cloud (Firebase Storage) con la sesión de editor, sin límites de Cloudinary.","Videos de hasta 500 MB."]},
   {v:"2.8.0",fecha:"9 de noviembre de 2026",items:["Videos por link: pega un link de YouTube (no listado) o Google Drive y se reproduce dentro de la app, sin subir archivos pesados.","También funciona en los videos de confección."]},
@@ -1005,10 +1006,35 @@ async function driveFinish(code){
   await setDoc(doc(db,"config","drive"),{refresh:j.refresh_token,folder:f.id,conectado:serverTimestamp()});
   await driveCfg(true);
 }
-async function uploadDrive(file,onProg){
+const _fold=new Map();
+async function driveFolder(path,tk,root){
+  let parent=root,key="";
+  for(const raw of path){
+    const nm=String(raw||"").replace(/[\\\/]/g," ").trim();if(!nm)continue;
+    key+="/"+nm;
+    if(_fold.has(key)){parent=_fold.get(key);continue}
+    const h={Authorization:"Bearer "+tk};
+    const q=`name='${nm.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parent}' in parents and trashed=false`;
+    const l=await (await fetch("https://www.googleapis.com/drive/v3/files?fields=files(id)&q="+encodeURIComponent(q),{headers:h})).json();
+    let id=l.files&&l.files[0]&&l.files[0].id;
+    if(!id){
+      const c=await (await fetch("https://www.googleapis.com/drive/v3/files?fields=id",{method:"POST",headers:{...h,"Content-Type":"application/json"},body:JSON.stringify({name:nm,mimeType:"application/vnd.google-apps.folder",parents:[parent]})})).json();
+      id=c.id;if(!id)throw new Error("no se pudo crear la carpeta «"+nm+"» en Drive");
+    }
+    _fold.set(key,id);parent=id;
+  }
+  return parent;
+}
+function placePath(pk,zk){
+  if(!pk||!PAISES[pk])return ["Sin clasificar"];
+  const z=zk&&ZONAS[pk]?ZONAS[pk].find(x=>x.k===zk):null;
+  return z?[PAISES[pk][0],z.n]:[PAISES[pk][0]];
+}
+async function uploadDrive(file,onProg,path){
   const c=await driveCfg(),tk=await driveToken();
+  const dest=await driveFolder(path||["Otros"],tk,c.folder);
   const mime=file.type||"application/octet-stream";
-  const st=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id",{method:"POST",headers:{Authorization:"Bearer "+tk,"Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Type":mime},body:JSON.stringify({name:file.name||"archivo",parents:[c.folder]})});
+  const st=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id",{method:"POST",headers:{Authorization:"Bearer "+tk,"Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Type":mime},body:JSON.stringify({name:file.name||"archivo",parents:[dest]})});
   if(!st.ok)throw new Error("Drive rechazó la subida ("+st.status+")");
   const loc=st.headers.get("Location");if(!loc)throw new Error("Drive no entregó la dirección de subida");
   const j=await new Promise((ok,no)=>{
@@ -1022,9 +1048,9 @@ async function uploadDrive(file,onProg){
   const tipo=/^video\//.test(mime)?"video":/^audio\//.test(mime)?"audio":"image";
   return {secure_url:tipo==="image"?`https://lh3.googleusercontent.com/d/${j.id}=w1600`:`https://drive.google.com/file/d/${j.id}/view`,resource_type:tipo};
 }
-async function uploadFile(file,onProg){
+async function uploadFile(file,onProg,path){
   if(!user)throw new Error("inicia sesión como editor para subir archivos");
-  if(DRIVE_CLIENT_ID&&await driveCfg())return uploadDrive(file,onProg);
+  if(DRIVE_CLIENT_ID&&await driveCfg())return uploadDrive(file,onProg,path);
   return uploadStorage(file,onProg);
 }
 /* vuelta del permiso de Google */
@@ -1073,7 +1099,7 @@ $("fVest").onsubmit=async e=>{
     if(file){
       if(!file.type.startsWith("image/"))throw new Error("el archivo debe ser una foto");
       $("vProg").hidden=false;$("vProg").value=0;
-      const r=await uploadFile(await shrink(file),p=>{$("vProg").value=p});
+      const r=await uploadFile(await shrink(file),p=>{$("vProg").value=p},["Vestuario"]);
       foto=r.secure_url;
     }
     let baile=$("vAlc").value;
@@ -1155,7 +1181,7 @@ $("fConf").onsubmit=async ev=>{
       if(!f.type.startsWith("video/"))throw new Error(`"${f.name}" no es un video`);
       if(f.size>MAX_VIDEO)throw new Error(`"${f.name}" pesa más de 500 MB`);
       $("cfProg").hidden=false;$("cfProg").value=0;msg.textContent=`Subiendo ${i+1} de ${files.length}…`;
-      const r=await uploadFile(f,p=>{$("cfProg").value=p});
+      const r=await uploadFile(f,p=>{$("cfProg").value=p},[...placePath(cfEnt.pk,cfEnt.zk),"Confección"]);
       list.push({url:r.secure_url,titulo:($("cfTit").value.trim()||f.name.replace(/\.[^.]+$/,""))+(files.length>1?` ${i+1}`:"")});
     }
     await saveOvr(cfEnt.oks[0],{confVideos:list,confActiva:true});
@@ -1249,7 +1275,7 @@ $("fPres").onsubmit=async ev=>{
       for(let i=0;i<FOT[k].pend.length;i++){
         const f=FOT[k].pend[i];
         msg.style.color="var(--mute)";msg.textContent=`Subiendo foto de ${TIT[k].toLowerCase()} ${i+1} de ${FOT[k].pend.length}…`;
-        const r=await uploadFile(await shrink(f),()=>{});
+        const r=await uploadFile(await shrink(f),()=>{},["Presentaciones"]);
         fotos.push({url:r.secure_url,titulo:(f.titulo||"").trim()});
       }
       data[CAMPO[k]]={texto:$(IDS[k]).value.trim(),fotos};
@@ -1323,7 +1349,8 @@ $("fAdd").onsubmit=async e=>{
       n++;$("prog").hidden=false;$("prog").value=0;
       msg.style.color="var(--mute)";msg.textContent=`Subiendo ${n} de ${total}…`;
       const file=x.tipo==="image"?await shrink(x.file):x.file;
-      const r=await uploadFile(file,p=>{$("prog").value=p});
+      const pc0=parseCuadro($("cuadro").value),pl=placeOf(pc0.padre,{lugarPais:$("lugP").value,lugarZona:$("lugZ").value,pais:$("pais").value.trim(),region:$("region").value.trim()},$("subtipo").value.trim()||pc0.sub);
+      const r=await uploadFile(file,p=>{$("prog").value=p},placePath(pl.pk,pl.zk));
       x.url=r.secure_url;if(x.tipo!=="audio")x.tipo=r.resource_type==="video"?"video":"image";delete x.file;delete x.prev;
     }
     msg.style.color="";msg.textContent="";
