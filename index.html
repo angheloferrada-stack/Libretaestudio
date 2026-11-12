@@ -92,6 +92,7 @@ video{width:100%;max-height:70vh;border-radius:14px;background:#000;display:bloc
 dialog{border:0;border-radius:20px;padding:0;width:min(560px,94vw);max-height:90vh;background:var(--bg);color:var(--ink)}
 dialog::backdrop{background:rgba(20,24,28,.55)}
 .dlg{padding:22px 20px 20px}
+#dVer[open]{display:flex}#dVer .dlg{display:flex;flex-direction:column;min-height:0;width:100%;max-height:90vh}#dVer #verList{overflow-y:auto;flex:1;min-height:0;overscroll-behavior:contain}#dVer .acts{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .dlg h2{font-size:1.65rem;margin-bottom:4px}
 label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 5px}
 .dlg input,.dlg textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
@@ -431,8 +432,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.2.0";
+const APP_VERSION="3.2.1";
 const CHANGELOG=[
+  {v:"3.2.1",fecha:"12 de noviembre de 2026",items:["El botón Cerrar de las novedades queda fijo abajo y la lista parte siempre desde arriba."]},
   {v:"3.2.0",fecha:"12 de noviembre de 2026",items:["Botón «⬆️ Subir video» al final de cada baile, sin tener que editarlo.","Botón «Tutorial» para admins con la guía de subida.","Los archivos antiguos de Cloudinary quedan ocultos mientras no se recupere la cuenta."]},
   {v:"3.1.0",fecha:"11 de noviembre de 2026",items:["Los archivos se guardan en Drive ordenados por carpetas: País → Zona o estado (ej. México → Veracruz). Las fotos de vestuario y presentaciones van en sus propias carpetas."]},
   {v:"3.0.0",fecha:"9 de noviembre de 2026",items:["Subida a Google Drive de la cuenta compartida: se conecta una vez (botón ☁️ Drive) y todos los editores suben a esa cuenta.","Audios de Drive se reproducen dentro de la app."]},
@@ -943,7 +945,7 @@ $("verList").innerHTML=CHANGELOG.map((c,i)=>`<div class="cl"><h3>Versión ${esc(
 $("q").oninput=e=>{txt=e.target.value;render()};
 document.addEventListener("click",e=>{
   const close=e.target.closest("[data-close]");if(close){close.closest("dialog").close();return}
-  if(e.target.closest("#btnVer,#btnVer2")){$("dVer").showModal();return}
+  if(e.target.closest("#btnVer,#btnVer2")){$("dVer").showModal();$("verList").scrollTop=0;return}
   const z=e.target.closest("[data-zoom]");
   if(z){$("imgBig").src=z.dataset.zoom;$("imgBig").alt=z.dataset.cap||"Foto";$("imgCap").textContent=z.dataset.cap||"";$("dImg").showModal();return}
   const a=e.target.closest("[data-act]");if(!a)return;
