@@ -384,12 +384,12 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 <dialog id="dFlag"><div class="dlg" style="text-align:center"><img id="flagBig" alt="" style="width:min(70vw,320px);border-radius:8px"><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
 
 <dialog id="dQuick"><form class="dlg" id="fQuick">
-  <h2>Subir video</h2>
+  <h2 id="qH">Subir video</h2>
   <p class="hint" id="qWhere"></p>
-  <label for="qFile">Video del celular</label><input id="qFile" type="file" accept="video/*" multiple>
-  <label for="qLink">…o link de YouTube / Drive</label><input id="qLink" placeholder="Pega el link aquí" inputmode="url">
+  <label for="qFile" id="qFileL">Video del celular</label><input id="qFile" type="file" accept="video/*" multiple>
+  <div id="qLinkBox"><label for="qLink">…o link de YouTube / Drive</label><input id="qLink" placeholder="Pega el link aquí" inputmode="url"></div>
   <label for="qTit">Título (opcional)</label><input id="qTit" placeholder="Ej: Coreografía completa">
-  <label for="qSec">Tipo de video</label><select id="qSec"><option value="ensayo">Video de ensayo</option><option value="presentacion">Video de presentación</option></select>
+  <div id="qSecBox"><label for="qSec">Tipo de video</label><select id="qSec"><option value="ensayo">Video de ensayo</option><option value="presentacion">Video de presentación</option></select></div>
   <div id="qCarpBox" hidden><label for="qCarp">Carpeta</label><select id="qCarp"></select></div>
   <progress id="qProg" max="100" value="0" hidden></progress>
   <div class="msg" id="qMsg" role="alert"></div>
@@ -398,7 +398,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 <dialog id="dTut"><div class="dlg">
   <h2>Cómo subir videos</h2>
   <ol class="tut">
-    <li><b>Entra al baile</b> y toca <b>⬆️ Subir video</b>, abajo de todo.</li>
+    <li><b>Entra al baile</b> y baja hasta el final. Ahí están <b>⬆️ Subir video</b>, <b>📷 Subir foto</b> y <b>🎵 Subir audio</b>.</li>
     <li><b>Elige el video</b> de tu celular (hasta 500 MB) <b>o pega un link</b> de YouTube o Drive.</li>
     <li>Ponle un <b>título</b> y dile si es de <b>ensayo</b> o de <b>presentación</b>.</li>
     <li>Toca <b>Subir</b> y espera a que termine la barra. No cierres la página.</li>
@@ -408,9 +408,16 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
   <h3 class="vsub">Si el video es muy pesado</h3>
   <p class="hint">Súbelo a YouTube como «No listado» (o a tu Drive con «cualquiera con el enlace») y pega el link. Se ve igual dentro de la app.</p>
   <h3 class="vsub">Fotos y audios</h3>
-  <p class="hint">Dentro del baile, toca <b>Editar baile</b> → <b>+ Agregar videos, fotos o audios</b>.</p>
-  <h3 class="vsub">Si no deja subir</h3>
-  <p class="hint">Toca <b>☁️ Drive</b> arriba. Si dice «ya está conectado», cierra sesión, entra de nuevo e inténtalo otra vez. Si no está conectado, conéctalo con la cuenta Google del conjunto (se hace una sola vez).</p>
+  <p class="hint">Usa los botones <b>📷 Subir foto</b> y <b>🎵 Subir audio</b> del baile. Funcionan igual que el de video.</p>
+  <h3 class="vsub">Conectar el Drive (solo la primera vez)</h3>
+  <ol class="tut">
+    <li>Entra como admin y toca <b>☁️ Drive</b>, arriba junto a «Tutorial».</li>
+    <li>Toca <b>Continuar</b> en el aviso.</li>
+    <li>Inicia sesión con la <b>cuenta Google del conjunto</b> (no la tuya personal).</li>
+    <li>Si sale «Google no ha verificado esta app»: toca <b>Avanzado</b> → <b>Ir a Bailes Huilén</b> → <b>Continuar</b>.</li>
+    <li>Cuando vuelvas a la app dirá <b>«Drive conectado ✅»</b>. Listo, ya pueden subir todos.</li>
+  </ol>
+  <p class="hint">Si al tocar ☁️ Drive dice «ya está conectado», no tienes que hacer nada más. Si una subida falla, cierra sesión, entra de nuevo e inténtalo otra vez.</p>
   <p class="hint">Los videos antiguos de Cloudinary están ocultos mientras no se recupere esa cuenta.</p>
   <div class="acts"><button type="button" class="btn small acc" data-close>Entendido</button></div>
 </div></dialog>
@@ -432,8 +439,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.2.1";
+const APP_VERSION="3.3.0";
 const CHANGELOG=[
+  {v:"3.3.0",fecha:"12 de noviembre de 2026",items:["Botones «📷 Subir foto» y «🎵 Subir audio» en cada baile.","El tutorial explica cómo conectar el Drive con el botón ☁️."]},
   {v:"3.2.1",fecha:"12 de noviembre de 2026",items:["El botón Cerrar de las novedades queda fijo abajo y la lista parte siempre desde arriba."]},
   {v:"3.2.0",fecha:"12 de noviembre de 2026",items:["Botón «⬆️ Subir video» al final de cada baile, sin tener que editarlo.","Botón «Tutorial» para admins con la guía de subida.","Los archivos antiguos de Cloudinary quedan ocultos mientras no se recupere la cuenta."]},
   {v:"3.1.0",fecha:"11 de noviembre de 2026",items:["Los archivos se guardan en Drive ordenados por carpetas: País → Zona o estado (ej. México → Veracruz). Las fotos de vestuario y presentaciones van en sus propias carpetas."]},
@@ -836,7 +844,7 @@ function detailView(e){
     <div class="chips">${chips.map(c=>`<span class="chip"><b>${c[0]}</b>${esc(c[1])}</span>`).join("")}</div>
     ${b.significado?`<section class="sec"><h3>Descripción</h3><div class="text">${esc(b.significado)}</div></section>`:""}
     ${body||`<p class="hint" style="margin-top:26px">Este baile aún no tiene videos ni fotos.</p>`}
-    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}<button class="btn small" data-act="ecuadro" data-id="${esc(e.id)}">Editar cuadro</button></div><div class="admin-acts" style="margin-top:10px"><button class="btn acc" data-act="qup" data-id="${esc(e.id)}">⬆️ Subir video</button></div>`:""}
+    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}<button class="btn small" data-act="ecuadro" data-id="${esc(e.id)}">Editar cuadro</button></div><div class="admin-acts" style="margin-top:10px"><button class="btn acc" data-act="qup" data-t="video" data-id="${esc(e.id)}">⬆️ Subir video</button><button class="btn acc" data-act="qup" data-t="image" data-id="${esc(e.id)}">📷 Subir foto</button><button class="btn acc" data-act="qup" data-t="audio" data-id="${esc(e.id)}">🎵 Subir audio</button></div>`:""}
   </article>`;
 }
 
@@ -953,7 +961,7 @@ document.addEventListener("click",e=>{
   if(act==="login")$("dLogin").showModal();
   else if(act==="drive"){(async()=>{const c=await driveCfg(true);if(c){alert("Drive ya está conectado ✅\nLos archivos nuevos se suben a la carpeta «Bailes Huilén (app)» de esa cuenta.")}else if(confirm("Vas a conectar el Drive de la cuenta compartida.\nInicia sesión con ESA cuenta de Google y acepta el permiso.\n\n¿Continuar?"))driveConnect()})()}
   else if(act==="tut")$("dTut").showModal();
-  else if(act==="qup"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openQuick(e)}
+  else if(act==="qup"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openQuick(e,a.dataset.t||"video")}
   else if(act==="out")signOut(auth);
   else if(act==="new")openForm(null);
   else if(act==="edit")openForm(bailes.find(x=>x.id===a.dataset.id));
@@ -1207,12 +1215,15 @@ $("cConfOn").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:true});
 $("cConfOff").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:false});$("cMsg").textContent="Sección confección quitada (los videos quedan guardados)."}catch(err){$("cMsg").textContent="No se pudo: "+err.message}};
 
 /* ---------- Subir video rápido (desde el baile) ---------- */
-let qEnt=null;
-function openQuick(e){
-  qEnt=e;$("fQuick").reset();$("qMsg").textContent="";$("qProg").hidden=true;$("qSave").disabled=false;
+let qEnt=null,qT="video";
+const QT={video:{h:"Subir video",acc:"video/*",l:"Video del celular"},image:{h:"Subir foto",acc:"image/*",l:"Foto del celular"},audio:{h:"Subir audio",acc:"audio/*,.mp3,.m4a,.wav,.ogg,.aac",l:"Audio del celular"}};
+function openQuick(e,t){
+  qT=t;qEnt=e;$("qH").textContent=QT[t].h;$("qFile").accept=QT[t].acc;$("qFileL").textContent=QT[t].l;$("qFile").multiple=true;
+  $("qLinkBox").hidden=t!=="video";$("qSecBox").hidden=t!=="video";
+  e=qEnt;$("fQuick").reset();$("qMsg").textContent="";$("qProg").hidden=true;$("qSave").disabled=false;
   $("qWhere").textContent=`${e.nombre} · se guarda en Drive: ${placePath(e.pk,e.zk).join(" → ")}`;
   const cs=e.doc&&Array.isArray(e.doc.carpetas)?e.doc.carpetas:[];
-  $("qCarpBox").hidden=!(/diablada/.test(norm([e.padre,e.sub,e.nombre].join(" ")))&&cs.length);
+  $("qCarpBox").hidden=!(qT==="video"&&/diablada/.test(norm([e.padre,e.sub,e.nombre].join(" ")))&&cs.length);
   $("qCarp").innerHTML=`<option value="">Sin carpeta</option>`+cs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
   $("dQuick").showModal();
 }
@@ -1220,19 +1231,22 @@ $("fQuick").onsubmit=async ev=>{
   ev.preventDefault();const e=qEnt,msg=$("qMsg"),btn=$("qSave");msg.style.color="";msg.textContent="";btn.disabled=true;
   try{
     const files=[...$("qFile").files],lk=$("qLink").value.trim();
-    if(!files.length&&!lk)throw new Error("elige un video o pega un link");
-    if(lk&&!linkInfo(lk))throw new Error("ese link no parece de YouTube ni de Drive");
+    const t=qT,isA=f=>f.type.startsWith("audio/")||/\.(mp3|m4a|wav|ogg|aac)$/i.test(f.name);
+    if(!files.length&&!(t==="video"&&lk))throw new Error(t==="video"?"elige un video o pega un link":t==="image"?"elige una foto":"elige un audio");
+    if(t==="video"&&lk&&!linkInfo(lk))throw new Error("ese link no parece de YouTube ni de Drive");
     for(const f of files){
-      if(!f.type.startsWith("video/"))throw new Error(`"${f.name}" no es un video`);
-      if(f.size>MAX_VIDEO)throw new Error(`"${f.name}" pesa más de 500 MB. Súbelo a YouTube y pega el link.`);
+      if(t==="video"&&!f.type.startsWith("video/"))throw new Error(`"${f.name}" no es un video`);
+      if(t==="image"&&!f.type.startsWith("image/"))throw new Error(`"${f.name}" no es una foto`);
+      if(t==="audio"&&!isA(f))throw new Error(`"${f.name}" no es un audio`);
+      if(t!=="image"&&f.size>MAX_VIDEO)throw new Error(`"${f.name}" pesa más de 500 MB.`+(t==="video"?" Súbelo a YouTube y pega el link.":""));
     }
     const base=($("qTit").value||"").trim(),sec=$("qSec").value,carp=$("qCarpBox").hidden?"":$("qCarp").value;
     const nuevos=[];
-    if(lk)nuevos.push({tipo:"video",url:lk,titulo:base,sec,carpeta:carp});
+    if(t==="video"&&lk)nuevos.push({tipo:"video",url:lk,titulo:base,sec,carpeta:carp});
     for(let i=0;i<files.length;i++){
       $("qProg").hidden=false;$("qProg").value=0;msg.style.color="var(--mute)";msg.textContent=`Subiendo ${i+1} de ${files.length}…`;
-      const r=await uploadFile(files[i],p=>{$("qProg").value=p},placePath(e.pk,e.zk));
-      nuevos.push({tipo:"video",url:r.secure_url,titulo:base?base+(files.length>1?` ${i+1}`:""):files[i].name.replace(/\.[^.]+$/,""),sec,carpeta:carp});
+      const r=await uploadFile(t==="image"?await shrink(files[i]):files[i],p=>{$("qProg").value=p},placePath(e.pk,e.zk));
+      nuevos.push({tipo:t,url:r.secure_url,titulo:base?base+(files.length>1?` ${i+1}`:""):files[i].name.replace(/\.[^.]+$/,""),sec:t==="video"?sec:"",carpeta:t==="video"?carp:""});
     }
     msg.textContent="Guardando…";
     if(e.doc){
