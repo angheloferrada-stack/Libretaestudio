@@ -82,6 +82,7 @@ video{width:100%;max-height:70vh;border-radius:14px;background:#000;display:bloc
 .photos img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:12px;background:#E9ECEE}
 .photos span{display:block;font-size:.84rem;color:var(--mute);padding:6px 2px 0}
 .text{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere}
+.tut{padding-left:20px;margin:0 0 14px;line-height:1.55}.tut li{margin-bottom:8px}
 .admin-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
 .empty{padding:44px 8px;text-align:center;color:var(--mute)}
 .foot{margin:44px 0 28px;text-align:center;color:var(--mute);font-size:.85rem}
@@ -381,6 +382,37 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 
 <dialog id="dFlag"><div class="dlg" style="text-align:center"><img id="flagBig" alt="" style="width:min(70vw,320px);border-radius:8px"><h2 id="flagName"></h2><div class="acts" style="justify-content:center"><button type="button" class="btn small" data-close>Cerrar</button></div></div></dialog>
 
+<dialog id="dQuick"><form class="dlg" id="fQuick">
+  <h2>Subir video</h2>
+  <p class="hint" id="qWhere"></p>
+  <label for="qFile">Video del celular</label><input id="qFile" type="file" accept="video/*" multiple>
+  <label for="qLink">…o link de YouTube / Drive</label><input id="qLink" placeholder="Pega el link aquí" inputmode="url">
+  <label for="qTit">Título (opcional)</label><input id="qTit" placeholder="Ej: Coreografía completa">
+  <label for="qSec">Tipo de video</label><select id="qSec"><option value="ensayo">Video de ensayo</option><option value="presentacion">Video de presentación</option></select>
+  <div id="qCarpBox" hidden><label for="qCarp">Carpeta</label><select id="qCarp"></select></div>
+  <progress id="qProg" max="100" value="0" hidden></progress>
+  <div class="msg" id="qMsg" role="alert"></div>
+  <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="qSave">Subir</button></div>
+</form></dialog>
+<dialog id="dTut"><div class="dlg">
+  <h2>Cómo subir videos</h2>
+  <ol class="tut">
+    <li><b>Entra al baile</b> y toca <b>⬆️ Subir video</b>, abajo de todo.</li>
+    <li><b>Elige el video</b> de tu celular (hasta 500 MB) <b>o pega un link</b> de YouTube o Drive.</li>
+    <li>Ponle un <b>título</b> y dile si es de <b>ensayo</b> o de <b>presentación</b>.</li>
+    <li>Toca <b>Subir</b> y espera a que termine la barra. No cierres la página.</li>
+  </ol>
+  <h3 class="vsub">¿Dónde queda guardado?</h3>
+  <p class="hint">En el Drive de la cuenta del conjunto, en una carpeta con el país y la zona del baile (ej. México → Veracruz). Se crea sola.</p>
+  <h3 class="vsub">Si el video es muy pesado</h3>
+  <p class="hint">Súbelo a YouTube como «No listado» (o a tu Drive con «cualquiera con el enlace») y pega el link. Se ve igual dentro de la app.</p>
+  <h3 class="vsub">Fotos y audios</h3>
+  <p class="hint">Dentro del baile, toca <b>Editar baile</b> → <b>+ Agregar videos, fotos o audios</b>.</p>
+  <h3 class="vsub">Si no deja subir</h3>
+  <p class="hint">Toca <b>☁️ Drive</b> arriba. Si dice «ya está conectado», cierra sesión, entra de nuevo e inténtalo otra vez. Si no está conectado, conéctalo con la cuenta Google del conjunto (se hace una sola vez).</p>
+  <p class="hint">Los videos antiguos de Cloudinary están ocultos mientras no se recupere esa cuenta.</p>
+  <div class="acts"><button type="button" class="btn small acc" data-close>Entendido</button></div>
+</div></dialog>
 <dialog id="dVer"><div class="dlg">
   <h2>Novedades</h2>
   <p class="hint" id="verNow" style="margin-bottom:18px"></p>
@@ -399,8 +431,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.1.0";
+const APP_VERSION="3.2.0";
 const CHANGELOG=[
+  {v:"3.2.0",fecha:"12 de noviembre de 2026",items:["Botón «⬆️ Subir video» al final de cada baile, sin tener que editarlo.","Botón «Tutorial» para admins con la guía de subida.","Los archivos antiguos de Cloudinary quedan ocultos mientras no se recupere la cuenta."]},
   {v:"3.1.0",fecha:"11 de noviembre de 2026",items:["Los archivos se guardan en Drive ordenados por carpetas: País → Zona o estado (ej. México → Veracruz). Las fotos de vestuario y presentaciones van en sus propias carpetas."]},
   {v:"3.0.0",fecha:"9 de noviembre de 2026",items:["Subida a Google Drive de la cuenta compartida: se conecta una vez (botón ☁️ Drive) y todos los editores suben a esa cuenta.","Audios de Drive se reproducen dentro de la app."]},
   {v:"2.9.0",fecha:"9 de noviembre de 2026",items:["Los videos, fotos y audios ahora se suben a Google Cloud (Firebase Storage) con la sesión de editor, sin límites de Cloudinary.","Videos de hasta 500 MB."]},
@@ -471,7 +504,8 @@ const VEST_DATA={"cuadros":["Huaso","Patagonia","Rapa Nui","Diablada (Cóndor)",
 const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const safe=u=>/^https:\/\//i.test(u||"")?u:"";
+const HIDE_CLOUDINARY=true;
+const safe=u=>/^https:\/\//i.test(u||"")&&!(HIDE_CLOUDINARY&&/cloudinary\.com/i.test(u))?u:"";
 function linkInfo(u){u=(u||"").trim();let m;
   if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/i))return{src:`https://www.youtube-nocookie.com/embed/${m[1]}`};
   if(m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]+)/i))return{src:`https://drive.google.com/file/d/${m[1]}/preview`};
@@ -738,7 +772,7 @@ const plural=(n,s)=>`${n} ${s}${n===1?"":"s"}`;
 let ENT=[],pendingMap=null;
 
 function rowHtml(e,showPlace){
-  const m=e.doc?mediaOf(e.doc):[],v=m.filter(x=>x.tipo==="video").length,a=m.filter(x=>x.tipo==="audio").length,f=m.length-v-a;
+  const m=(e.doc?mediaOf(e.doc):[]).filter(x=>safe(x.url)),v=m.filter(x=>x.tipo==="video").length,a=m.filter(x=>x.tipo==="audio").length,f=m.length-v-a;
   const meta=[showPlace?placeText(e):"",norm(e.padre)!==norm(e.nombre)?"Cuadro "+e.padre:""].filter(Boolean).join(" · ");
   const cnt=[v?plural(v,"video"):"",a?plural(a,"audio"):"",f?plural(f,"foto"):""].filter(Boolean).join(" · ")||"Sin videos ni fotos aún";
   return `<a class="row" style="--c:${colorOf(norm(e.padre))}" href="#/b/${encodeURIComponent(e.id)}"><span><b>${esc(e.nombre)}</b>${meta?`<small>${esc(meta)}</small>`:""}<small>${cnt}</small></span><span class="go" aria-hidden="true">›</span></a>`;
@@ -800,7 +834,7 @@ function detailView(e){
     <div class="chips">${chips.map(c=>`<span class="chip"><b>${c[0]}</b>${esc(c[1])}</span>`).join("")}</div>
     ${b.significado?`<section class="sec"><h3>Descripción</h3><div class="text">${esc(b.significado)}</div></section>`:""}
     ${body||`<p class="hint" style="margin-top:26px">Este baile aún no tiene videos ni fotos.</p>`}
-    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}<button class="btn small" data-act="ecuadro" data-id="${esc(e.id)}">Editar cuadro</button></div>`:""}
+    ${user?`<div class="admin-acts">${e.doc?`<button class="btn small" data-act="edit" data-id="${esc(e.id)}">Editar baile</button><button class="btn small danger" data-act="del" data-id="${esc(e.id)}">Eliminar baile</button>`:`<button class="btn small acc" data-act="newph" data-id="${esc(e.id)}">Agregar videos, fotos y datos</button>`}<button class="btn small" data-act="ecuadro" data-id="${esc(e.id)}">Editar cuadro</button></div><div class="admin-acts" style="margin-top:10px"><button class="btn acc" data-act="qup" data-id="${esc(e.id)}">⬆️ Subir video</button></div>`:""}
   </article>`;
 }
 
@@ -895,7 +929,7 @@ function render(){
 
 function renderAdminBar(){
   $("adminBar").innerHTML=user
-    ?`<button class="btn small acc" data-act="new">+ Agregar baile</button> <button class="btn small" data-act="drive">${DRIVE_CLIENT_ID?"☁️ Drive":""}</button> <button class="btn small" data-act="out">Salir</button>`
+    ?`<button class="btn small acc" data-act="new">+ Agregar baile</button> <button class="btn small" data-act="drive">${DRIVE_CLIENT_ID?"☁️ Drive":""}</button> <button class="btn small" data-act="tut">Tutorial</button> <button class="btn small" data-act="out">Salir</button>`
     :`<button class="btn small" data-act="login">Ingreso admin</button>`;
 }
 window.addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
@@ -916,6 +950,8 @@ document.addEventListener("click",e=>{
   const act=a.dataset.act;
   if(act==="login")$("dLogin").showModal();
   else if(act==="drive"){(async()=>{const c=await driveCfg(true);if(c){alert("Drive ya está conectado ✅\nLos archivos nuevos se suben a la carpeta «Bailes Huilén (app)» de esa cuenta.")}else if(confirm("Vas a conectar el Drive de la cuenta compartida.\nInicia sesión con ESA cuenta de Google y acepta el permiso.\n\n¿Continuar?"))driveConnect()})()}
+  else if(act==="tut")$("dTut").showModal();
+  else if(act==="qup"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openQuick(e)}
   else if(act==="out")signOut(auth);
   else if(act==="new")openForm(null);
   else if(act==="edit")openForm(bailes.find(x=>x.id===a.dataset.id));
@@ -1167,6 +1203,46 @@ $("cDelAll").onclick=()=>{const l=ENT.filter(x=>norm(x.padre)===norm(cEnt.padre)
 
 $("cConfOn").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:true});$("cMsg").textContent="Sección confección añadida. Ya sale el botón Confección en el baile."}catch(err){$("cMsg").textContent="No se pudo: "+err.message}};
 $("cConfOff").onclick=async()=>{try{await saveOvr(cEnt.oks[0],{confActiva:false});$("cMsg").textContent="Sección confección quitada (los videos quedan guardados)."}catch(err){$("cMsg").textContent="No se pudo: "+err.message}};
+
+/* ---------- Subir video rápido (desde el baile) ---------- */
+let qEnt=null;
+function openQuick(e){
+  qEnt=e;$("fQuick").reset();$("qMsg").textContent="";$("qProg").hidden=true;$("qSave").disabled=false;
+  $("qWhere").textContent=`${e.nombre} · se guarda en Drive: ${placePath(e.pk,e.zk).join(" → ")}`;
+  const cs=e.doc&&Array.isArray(e.doc.carpetas)?e.doc.carpetas:[];
+  $("qCarpBox").hidden=!(/diablada/.test(norm([e.padre,e.sub,e.nombre].join(" ")))&&cs.length);
+  $("qCarp").innerHTML=`<option value="">Sin carpeta</option>`+cs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  $("dQuick").showModal();
+}
+$("fQuick").onsubmit=async ev=>{
+  ev.preventDefault();const e=qEnt,msg=$("qMsg"),btn=$("qSave");msg.style.color="";msg.textContent="";btn.disabled=true;
+  try{
+    const files=[...$("qFile").files],lk=$("qLink").value.trim();
+    if(!files.length&&!lk)throw new Error("elige un video o pega un link");
+    if(lk&&!linkInfo(lk))throw new Error("ese link no parece de YouTube ni de Drive");
+    for(const f of files){
+      if(!f.type.startsWith("video/"))throw new Error(`"${f.name}" no es un video`);
+      if(f.size>MAX_VIDEO)throw new Error(`"${f.name}" pesa más de 500 MB. Súbelo a YouTube y pega el link.`);
+    }
+    const base=($("qTit").value||"").trim(),sec=$("qSec").value,carp=$("qCarpBox").hidden?"":$("qCarp").value;
+    const nuevos=[];
+    if(lk)nuevos.push({tipo:"video",url:lk,titulo:base,sec,carpeta:carp});
+    for(let i=0;i<files.length;i++){
+      $("qProg").hidden=false;$("qProg").value=0;msg.style.color="var(--mute)";msg.textContent=`Subiendo ${i+1} de ${files.length}…`;
+      const r=await uploadFile(files[i],p=>{$("qProg").value=p},placePath(e.pk,e.zk));
+      nuevos.push({tipo:"video",url:r.secure_url,titulo:base?base+(files.length>1?` ${i+1}`:""):files[i].name.replace(/\.[^.]+$/,""),sec,carpeta:carp});
+    }
+    msg.textContent="Guardando…";
+    if(e.doc){
+      const cur=mediaOf(e.doc).map(x=>({tipo:x.tipo||"image",url:x.url,titulo:x.titulo||"",sec:x.sec||"",carpeta:x.carpeta||""}));
+      await updateDoc(doc(db,"bailes",e.id),{media:[...cur,...nuevos],actualizado:serverTimestamp()});
+    }else{
+      await addDoc(collection(db,"bailes"),{nombre:e.nombre,cuadro:e.padre,subtipo:e.sub||"",pais:e.pk?PAISES[e.pk][0]:"",region:zoneName(e)||"",significado:"",letra:"",traduccion:"",lugarPais:e.pk||"",lugarZona:e.zk||"",media:nuevos,carpetas:[],creado:serverTimestamp()});
+    }
+    $("dQuick").close();
+  }catch(err){msg.style.color="";msg.textContent="No se pudo subir: "+err.message}
+  finally{btn.disabled=false;$("qProg").hidden=true}
+};
 
 /* ---------- Videos de confección ---------- */
 let cfEnt=null;
