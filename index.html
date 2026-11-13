@@ -77,6 +77,16 @@ button,input,textarea{font:inherit}
 .vid p{margin:0 0 7px;font-weight:600}
 audio{width:100%;display:block}
 video{width:100%;max-height:70vh;border-radius:14px;background:#000;display:block}
+.vp{position:relative;width:100%;aspect-ratio:16/9;max-height:70vh;background:#000;border-radius:18px;overflow:hidden;user-select:none;-webkit-user-select:none}
+.vp video{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:contain;border-radius:0}
+.vp-big{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#14181C;font-size:26px;padding-left:5px;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
+.vp.play .vp-big{opacity:0;pointer-events:none}
+.vp-bar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:26px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.vp-bar button{border:0;background:none;color:#fff;font-size:20px;width:34px;height:34px;padding:0;cursor:pointer;flex:none}
+.vp-t{color:#fff;font-size:.8rem;font-variant-numeric:tabular-nums;flex:none;min-width:84px;text-align:center}
+.vp-seek{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:5px;border-radius:5px;background:rgba(255,255,255,.35);outline:0;margin:0;padding:0;border:0}
+.vp-seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:0}
+.vp-seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
 .photos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .photos button{padding:0;border:0;background:none;text-align:left;cursor:zoom-in}
 .photos img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-radius:12px;background:#E9ECEE}
@@ -439,8 +449,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.3.0";
+const APP_VERSION="3.3.1";
 const CHANGELOG=[
+  {v:"3.3.1",fecha:"12 de noviembre de 2026",items:["Reproductor de video nuevo: botón de play grande, barra de avance y pantalla completa."]},
   {v:"3.3.0",fecha:"12 de noviembre de 2026",items:["Botones «📷 Subir foto» y «🎵 Subir audio» en cada baile.","El tutorial explica cómo conectar el Drive con el botón ☁️."]},
   {v:"3.2.1",fecha:"12 de noviembre de 2026",items:["El botón Cerrar de las novedades queda fijo abajo y la lista parte siempre desde arriba."]},
   {v:"3.2.0",fecha:"12 de noviembre de 2026",items:["Botón «⬆️ Subir video» al final de cada baile, sin tener que editarlo.","Botón «Tutorial» para admins con la guía de subida.","Los archivos antiguos de Cloudinary quedan ocultos mientras no se recupere la cuenta."]},
@@ -520,7 +531,7 @@ function linkInfo(u){u=(u||"").trim();let m;
   if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/i))return{src:`https://www.youtube-nocookie.com/embed/${m[1]}`};
   if(m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]+)/i))return{src:`https://drive.google.com/file/d/${m[1]}/preview`};
   return null}
-const vplay=u=>{const l=linkInfo(u);return l?`<iframe src="${esc(l.src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>`:`<video src="${esc(safe(u))}#t=0.1" controls playsinline preload="metadata"></video>`};
+const vplay=u=>{const l=linkInfo(u);return l?`<iframe src="${esc(l.src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>`:`<div class="vp"><video src="${esc(safe(u))}#t=0.1" playsinline preload="metadata"></video><button type="button" class="vp-big" aria-label="Reproducir">▶</button><div class="vp-bar"><button type="button" class="vp-pl" aria-label="Pausar o reproducir">▶</button><input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="Posición del video"><span class="vp-t">0:00</span><button type="button" class="vp-fs" aria-label="Pantalla completa">⛶</button></div></div>`};
 const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").toLowerCase().trim();
 const PAL=["#0E7C86","#C2308A","#7B3FBF","#1479B8"];
 const colorOf=k=>{let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return PAL[h%PAL.length]};
@@ -992,6 +1003,20 @@ $("fLogin").onsubmit=async e=>{
   try{await signInWithEmailAndPassword(auth,$("em").value,$("pw").value);$("dLogin").close();$("fLogin").reset()}
   catch{$("loginMsg").textContent="Correo o contraseña incorrectos."}
 };
+
+/* ---------- Reproductor propio ---------- */
+{const fmt=t=>{t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+ const V=el=>el.closest&&el.closest(".vp");
+ const upd=w=>{const v=w.querySelector("video"),sk=w.querySelector(".vp-seek");if(!v)return;if(!sk.dataset.drag)sk.value=v.duration?Math.round(v.currentTime/v.duration*1000):0;w.querySelector(".vp-t").textContent=fmt(v.currentTime)+" / "+fmt(v.duration)};
+ const toggle=w=>{const v=w.querySelector("video");if(v.paused){document.querySelectorAll(".vp video").forEach(o=>{if(o!==v)o.pause()});v.play().catch(()=>{})}else v.pause()};
+ document.addEventListener("click",e=>{const w=V(e.target);if(!w)return;
+   if(e.target.closest(".vp-big,.vp-pl")||e.target.tagName==="VIDEO")toggle(w);
+   else if(e.target.closest(".vp-fs")){const v=w.querySelector("video");if(document.fullscreenElement){document.exitFullscreen()}else if(w.requestFullscreen)w.requestFullscreen().catch(()=>{});else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()}});
+ document.addEventListener("input",e=>{if(!e.target.classList||!e.target.classList.contains("vp-seek"))return;const w=V(e.target),v=w.querySelector("video");e.target.dataset.drag="1";if(v.duration)v.currentTime=e.target.value/1000*v.duration;upd(w)});
+ document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("vp-seek"))delete e.target.dataset.drag});
+ for(const ev of["play","pause","ended","timeupdate","loadedmetadata","durationchange"])document.addEventListener(ev,e=>{if(e.target.tagName!=="VIDEO")return;const w=V(e.target);if(!w)return;
+   if(ev==="play"||ev==="pause"||ev==="ended"){const pl=!e.target.paused&&!e.target.ended;w.classList.toggle("play",pl);w.querySelector(".vp-pl").textContent=pl?"❚❚":"▶"}
+   upd(w)},true)}
 
 /* ---------- Subida a Firebase Storage (Google Cloud) ---------- */
 async function shrink(file){
