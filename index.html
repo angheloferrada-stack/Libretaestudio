@@ -237,6 +237,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .vlines line{stroke:var(--teal);stroke-width:1.4}
 .vlines circle{fill:var(--teal)}
 .flagimg{width:72px;height:auto;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;box-shadow:0 2px 6px -2px rgba(0,0,0,.25);flex:none}
+#btnBell.on{background:#E4F5EE;border-color:#BFE3D2}
 .pq{margin-top:18px;padding:16px;border-radius:18px;background:#fff;border:1.5px solid var(--line)}
 .pq label{font:700 1.05rem/1.2 "DM Sans",sans-serif;display:block;margin-bottom:8px}
 .pq input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:1rem}
@@ -246,6 +247,9 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .presbar{display:flex;gap:10px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none}
 .presbar::-webkit-scrollbar{display:none}
 .pres{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 16px;border-radius:18px;background:var(--ink);color:#fff;border:0;cursor:pointer;text-align:left;box-shadow:0 8px 18px -10px rgba(20,24,28,.6)}
+.pres.ens{background:#BFE4F5;color:#0B3B52;box-shadow:0 8px 18px -10px rgba(14,100,140,.55)}
+.ensbox{border-radius:16px;background:#E3F3FA;border:1.5px solid #BFE4F5;padding:14px 16px;margin:6px 0 12px;font-weight:600;color:#0B3B52}
+.ensbox div{margin:2px 0}
 .pres b{font:700 .95rem/1.1 "DM Sans",sans-serif;text-transform:capitalize}
 .pres span{font-size:.8rem;opacity:.85;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pbl{max-height:230px;overflow:auto;border:1.5px solid var(--line);border-radius:10px;padding:4px 10px;background:#fff}
@@ -284,7 +288,7 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#/" aria-label="Huilén, conjunto folclórico. Ir al inicio"><img src="logo.png" alt="Huilén conjunto folclórico"></a>
-    <button class="pill" id="btnVer" aria-label="Ver versión y cambios"></button>
+    <button class="pill" id="btnBell" aria-label="Activar avisos" hidden>🔔 Avisos</button> <button class="pill" id="btnVer" aria-label="Ver versión y cambios"></button>
     <span id="adminBar"></span>
   </div>
   <div class="line"></div>
@@ -380,7 +384,9 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 
 <dialog id="dPres"><form class="dlg" id="fPres"><h2 id="pTitle">Nueva presentación</h2>
   <label for="pFecha">Fecha</label><input id="pFecha" type="date" required>
-  <label for="pTit">Lugar o evento (opcional)</label><input id="pTit" placeholder="Ej: Fiesta patria en la plaza">
+  <label for="pTit" id="pTitL">Lugar o evento (opcional)</label><input id="pTit" placeholder="Ej: Fiesta patria en la plaza">
+  <div class="eOnly" hidden><label for="pLugar">Lugar del ensayo</label><input id="pLugar" placeholder="Ej: Gimnasio del colegio"><label for="pHora">Hora (opcional)</label><input id="pHora" type="time"></div>
+  <div class="pOnly">
   <label for="pBusca">Bailes a presentar</label><input id="pBusca" type="search" placeholder="🔍 Buscar baile o cuadro">
   <div id="pBailes" class="pbl"></div>
   <p class="hint">Toca un país para desplegar sus cuadros y bailes. Marca el baile y escribe quiénes lo bailan en cada columna, separados por coma. Ej: Ana, Maite</p>
@@ -392,15 +398,17 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
     <label for="pPei">Descripción (opcional)</label><textarea id="pPei" rows="2" placeholder="Ej: Moño bajo con trenzas"></textarea>
     <label for="pPeiFile">Fotos de ejemplo</label><input id="pPeiFile" type="file" accept="image/*" multiple>
     <div id="pPeiList" class="fotlist"></div></div>
+  </div>
   <label for="pNotas">Notas o avisos</label><textarea id="pNotas" rows="4" placeholder="Ej: Llegar 18:30 con vestuario completo"></textarea>
   <div class="msg" id="pMsg" role="alert"></div>
   <div class="acts"><button type="button" class="btn small" data-close>Cancelar</button><button class="btn small acc" id="pSave">Guardar</button></div>
 </form></dialog>
 
 <dialog id="dPresVer"><div class="dlg">
-  <span class="kick">Próxima presentación</span><h2 id="pvFecha"></h2>
-  <h3 class="vsub">Bailes y quiénes bailan</h3><div id="pvBailes"></div>
-  <div id="pvMaq"></div>
+  <span class="kick" id="pvKick">Próxima presentación</span><h2 id="pvFecha"></h2>
+  <div id="pvEns"></div>
+  <div id="pvPres"><h3 class="vsub">Bailes y quiénes bailan</h3><div id="pvBailes"></div>
+  <div id="pvMaq"></div></div>
   <h3 class="vsub">Notas</h3><div class="text" id="pvNotas"></div>
   <div class="acts"><span id="pvAdm" style="display:flex;gap:8px"><button type="button" class="btn small" id="pvEdit">Editar</button><button type="button" class="btn small danger" id="pvDel">Eliminar</button></span><button type="button" class="btn small" data-close>Cerrar</button></div>
 </div></dialog>
@@ -457,14 +465,17 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getFirestore,getDoc,collection,addDoc,updateDoc,deleteDoc,setDoc,doc,onSnapshot,query,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getMessaging,getToken} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 import {getStorage,ref as sRef,uploadBytesResumable,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.5.0";
+const APP_VERSION="3.7.0";
 const CHANGELOG=[
+  {v:"3.7.0",fecha:"14 de noviembre de 2026",items:["Avisos: botón «🔔 Avisos» para recibir una notificación cuando se suba una presentación o un ensayo especial."]},
+  {v:"3.6.0",fecha:"14 de noviembre de 2026",items:["Ensayo especial: burbuja celeste en el inicio con fecha, hora, lugar y notas de aviso (ej. «ensayo general»)."]},
   {v:"3.5.0",fecha:"14 de noviembre de 2026",items:["Reproductor: botones de ±10 segundos, ir a un minuto exacto (toca el tiempo) y velocidad 0,5x / 0,75x / 1x / 1,5x.","Buscador «¿Qué bailo?» bajo las presentaciones: escribes tu nombre y ves tus bailes."]},
   {v:"3.4.0",fecha:"13 de noviembre de 2026",items:["Los videos de Drive usan el mismo reproductor limpio de la app (si falla, se abre el de Drive como respaldo)."]},
   {v:"3.3.1",fecha:"12 de noviembre de 2026",items:["Reproductor de video nuevo: botón de play grande, barra de avance y pantalla completa."]},
@@ -1006,7 +1017,8 @@ document.addEventListener("click",e=>{
   else if(act==="cfadd"){const e=ENT.find(x=>x.id===a.dataset.id);if(e){cfEnt=e;$("fConf").reset();$("cfMsg").textContent="";$("cfProg").hidden=true;$("dConf").showModal()}}
   else if(act==="cfdel"){const e=ENT.find(x=>x.id===a.dataset.id);if(e&&confirm("¿Quitar este video de confección?")){const o=OVR.get(e.oks[0])||{};saveOvr(e.oks[0],{confVideos:(o.confVideos||[]).filter((_,i)=>i!==+a.dataset.i)})}}
   else if(act==="pres"){const p=presList.find(x=>x.id===a.dataset.id);if(p)openPresView(p)}
-  else if(act==="presnew")openPresForm(null)
+  else if(act==="presnew")openPresForm(null);
+  else if(act==="presens")openPresForm(null,"ens")
   else if(act==="ecuadro"){const e=ENT.find(x=>x.id===a.dataset.id);if(e)openCuadro(e)}
   else if(act==="vnew")openVest(null,a.dataset.k,a.dataset.g,a.dataset.s,a.dataset.v);
   else if(act==="vedit"){const x=vestDocs.find(v=>v.id===a.dataset.id);if(x)openVest(x,norm(x.padre),x.genero)}
@@ -1350,8 +1362,8 @@ const fmtFecha=f=>new Date(f+"T12:00:00").toLocaleDateString("es-CL",{weekday:"s
 function presHtml(){
   const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
   const up=presList.filter(p=>p.fecha>=hs).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,4);
-  const add=user?`<div class="vtools"><button class="btn small acc" data-act="presnew">+ Presentación</button></div>`:"";
-  return `<div class="presbar">${up.map(p=>`<button type="button" class="pres" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}</b><span>${esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}<div class="pq"><label for="pqIn">¿Qué bailo?</label><input id="pqIn" type="search" placeholder="Escribe tu nombre" value="${esc(qBailo)}" autocomplete="off"><div id="pqOut">${pqRes(qBailo)}</div></div>`;
+  const add=user?`<div class="vtools"><button class="btn small acc" data-act="presnew">+ Presentación</button><button class="btn small" data-act="presens" style="background:#BFE4F5;border-color:#BFE4F5;color:#0B3B52">+ Ensayo especial</button></div>`:"";
+  return `<div class="presbar">${up.map(p=>`<button type="button" class="pres${p.tipo==="ensayo"?" ens":""}" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}${p.hora?" · "+esc(p.hora):""}</b><span>${p.tipo==="ensayo"?"Ensayo · "+esc(p.titulo||p.lugar||"especial"):esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}<div class="pq"><label for="pqIn">¿Qué bailo?</label><input id="pqIn" type="search" placeholder="Escribe tu nombre" value="${esc(qBailo)}" autocomplete="off"><div id="pqOut">${pqRes(qBailo)}</div></div>`;
 }
 let qBailo="";
 function pqRes(q){
@@ -1374,6 +1386,10 @@ document.addEventListener("input",e=>{if(e.target.id==="pqIn"){qBailo=e.target.v
 const fotSec=(t,o)=>o&&(o.texto||(o.fotos||[]).length)?`<h3 class="vsub">${t}</h3>${o.texto?`<div class="text">${esc(o.texto)}</div>`:""}${(o.fotos||[]).length?`<div class="photos" style="margin-top:12px">${o.fotos.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||t)}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||t)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div>`:""}`:"";
 function openPresView(p){
   pvId=p.id;
+  const ens=p.tipo==="ensayo";
+  $("pvKick").textContent=ens?"Ensayo especial":"Próxima presentación";
+  $("pvPres").hidden=ens;
+  $("pvEns").innerHTML=ens?`<div class="ensbox">${p.hora?`<div>🕒 ${esc(p.hora)}</div>`:""}${p.lugar?`<div>📍 ${esc(p.lugar)}</div>`:""}${!p.hora&&!p.lugar?`<div>Revisa las notas</div>`:""}</div>`:"";
   $("pvFecha").textContent=fmtFecha(p.fecha)+(p.titulo?" · "+p.titulo:"");
   const colP=(t,l)=>`<div class="pcol"><span class="ptag">${t}</span><ol>${l.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>—</li>"}</ol></div>`;
   $("pvBailes").innerHTML=(p.bailes||[]).map(b=>{
@@ -1404,10 +1420,16 @@ $("pBusca").oninput=()=>{
   document.querySelectorAll("#pBailes .pitem").forEach(i=>{i.hidden=!!q&&!i.dataset.q.includes(q)});
   document.querySelectorAll("#pBailes .pdet").forEach(d=>{const any=!!d.querySelector(".pitem:not([hidden])");d.hidden=!!q&&!any;d.open=!!q});
 };
-function openPresForm(p){
+let presMode="pres";
+function openPresForm(p,mode){
+  presMode=p?(p.tipo==="ensayo"?"ens":"pres"):(mode||"pres");
+  const E=presMode==="ens";
+  document.querySelectorAll("#dPres .pOnly").forEach(x=>x.hidden=E);document.querySelectorAll("#dPres .eOnly").forEach(x=>x.hidden=!E);
   presEditId=p?p.id:null;
   $("fPres").reset();$("pMsg").textContent="";$("pBusca").value="";
-  $("pTitle").textContent=p?"Editar presentación":"Nueva presentación";
+  $("pTitle").textContent=E?(p?"Editar ensayo especial":"Nuevo ensayo especial"):(p?"Editar presentación":"Nueva presentación");
+  $("pTitL").textContent=E?"Nombre del ensayo":"Lugar o evento (opcional)";$("pTit").placeholder=E?"Ej: Ensayo general":"Ej: Fiesta patria en la plaza";
+  $("pLugar").value=p?(p.lugar||""):"";$("pHora").value=p?(p.hora||""):"";
   $("pFecha").value=p?p.fecha:"";
   $("pTit").value=p?(p.titulo||""):"";
   $("pNotas").value=p?(p.notas||""):"";
@@ -1440,7 +1462,8 @@ $("fPres").onsubmit=async ev=>{
     const fecha=$("pFecha").value;if(!fecha)throw new Error("elige la fecha");
     const bailes=[...$("pBailes").querySelectorAll(".pitem")].filter(i=>i.querySelector("input[type=checkbox]").checked).map(i=>{const c=i.querySelector("input[type=checkbox]");const sp=v=>v.split(/[,\n]/).map(x=>x.trim()).filter(Boolean);return {id:c.value,nombre:c.dataset.nm,mujeres:sp(i.querySelector(".pdm").value),hombres:sp(i.querySelector(".pdh").value)}});
     const data={fecha,titulo:$("pTit").value.trim(),bailes,notas:$("pNotas").value.trim()};
-    for(const k of ["maq","pei"]){
+    if(presMode==="ens"){Object.assign(data,{tipo:"ensayo",lugar:$("pLugar").value.trim(),hora:$("pHora").value,bailes:[]})}
+    else for(const k of ["maq","pei"]){
       const fotos=[...FOT[k].fotos];
       for(let i=0;i<FOT[k].pend.length;i++){
         const f=FOT[k].pend[i];
@@ -1538,6 +1561,23 @@ $("fAdd").onsubmit=async e=>{
 };
 
 render();
+/* ---------- Avisos (notificaciones push) ---------- */
+const VAPID_KEY="";
+const bell=$("btnBell");
+async function bellState(){let on=false;try{on=localStorage.getItem("hbell")==="1"&&Notification.permission==="granted"}catch{}bell.textContent=on?"🔔 Avisos activos":"🔔 Avisos";bell.classList.toggle("on",on)}
+if(VAPID_KEY&&"serviceWorker"in navigator&&"Notification"in window){bell.hidden=false;bellState();
+  bell.onclick=async()=>{
+    try{
+      if(Notification.permission==="denied"){alert("Los avisos están bloqueados. Actívalos en la configuración del navegador para este sitio.");return}
+      const perm=await Notification.requestPermission();if(perm!=="granted")return;
+      const reg=await navigator.serviceWorker.ready;
+      const tk=await getToken(getMessaging(app),{vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});
+      if(!tk)throw new Error("no se obtuvo el permiso");
+      await setDoc(doc(db,"tokens",tk),{creado:serverTimestamp()});
+      try{localStorage.setItem("hbell","1")}catch{}
+      bellState();alert("Listo 🔔 Te avisaremos cuando se suba una presentación o ensayo.");
+    }catch(err){alert("No se pudieron activar los avisos: "+err.message)}
+  }}
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </body>
