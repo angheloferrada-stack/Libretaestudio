@@ -449,8 +449,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.3.1";
+const APP_VERSION="3.4.0";
 const CHANGELOG=[
+  {v:"3.4.0",fecha:"13 de noviembre de 2026",items:["Los videos de Drive usan el mismo reproductor limpio de la app (si falla, se abre el de Drive como respaldo)."]},
   {v:"3.3.1",fecha:"12 de noviembre de 2026",items:["Reproductor de video nuevo: botón de play grande, barra de avance y pantalla completa."]},
   {v:"3.3.0",fecha:"12 de noviembre de 2026",items:["Botones «📷 Subir foto» y «🎵 Subir audio» en cada baile.","El tutorial explica cómo conectar el Drive con el botón ☁️."]},
   {v:"3.2.1",fecha:"12 de noviembre de 2026",items:["El botón Cerrar de las novedades queda fijo abajo y la lista parte siempre desde arriba."]},
@@ -531,7 +532,15 @@ function linkInfo(u){u=(u||"").trim();let m;
   if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/i))return{src:`https://www.youtube-nocookie.com/embed/${m[1]}`};
   if(m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]+)/i))return{src:`https://drive.google.com/file/d/${m[1]}/preview`};
   return null}
-const vplay=u=>{const l=linkInfo(u);return l?`<iframe src="${esc(l.src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>`:`<div class="vp"><video src="${esc(safe(u))}#t=0.1" playsinline preload="metadata"></video><button type="button" class="vp-big" aria-label="Reproducir">▶</button><div class="vp-bar"><button type="button" class="vp-pl" aria-label="Pausar o reproducir">▶</button><input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="Posición del video"><span class="vp-t">0:00</span><button type="button" class="vp-fs" aria-label="Pantalla completa">⛶</button></div></div>`};
+const DRIVE_API_KEY="";
+const vpHtml=(src,fb)=>`<div class="vp"${fb?` data-fb="${esc(fb)}"`:""}><video src="${esc(src)}#t=0.1" playsinline preload="metadata"></video><button type="button" class="vp-big" aria-label="Reproducir">▶</button><div class="vp-bar"><button type="button" class="vp-pl" aria-label="Pausar o reproducir">▶</button><input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="Posición del video"><span class="vp-t">0:00</span><button type="button" class="vp-fs" aria-label="Pantalla completa">⛶</button></div></div>`;
+const ifr=src=>`<iframe src="${esc(src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>`;
+const vplay=u=>{const l=linkInfo(u);
+  if(!l)return vpHtml(safe(u));
+  const d=l.src.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+  if(d&&DRIVE_API_KEY)return vpHtml(`https://www.googleapis.com/drive/v3/files/${d[1]}?alt=media&key=${DRIVE_API_KEY}`,l.src);
+  return ifr(l.src)};
+document.addEventListener("error",ev=>{const v=ev.target,w=v&&v.tagName==="VIDEO"&&v.closest&&v.closest(".vp[data-fb]");if(w)w.outerHTML=ifr(w.dataset.fb)},true);
 const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").toLowerCase().trim();
 const PAL=["#0E7C86","#C2308A","#7B3FBF","#1479B8"];
 const colorOf=k=>{let h=0;for(const ch of k)h=(h*31+ch.charCodeAt(0))>>>0;return PAL[h%PAL.length]};
