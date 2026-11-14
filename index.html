@@ -81,9 +81,17 @@ video{width:100%;max-height:70vh;border-radius:14px;background:#000;display:bloc
 .vp video{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:contain;border-radius:0}
 .vp-big{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:68px;height:68px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#14181C;font-size:26px;padding-left:5px;box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
 .vp.play .vp-big{opacity:0;pointer-events:none}
-.vp-bar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:26px 12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.vp-bar{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:26px 12px 8px;background:linear-gradient(transparent,rgba(0,0,0,.72))}
 .vp-bar button{border:0;background:none;color:#fff;font-size:20px;width:34px;height:34px;padding:0;cursor:pointer;flex:none}
-.vp-t{color:#fff;font-size:.8rem;font-variant-numeric:tabular-nums;flex:none;min-width:84px;text-align:center}
+.vp-row{display:flex;align-items:center;gap:2px}.vp-gap{flex:1}
+.vp-bar .vp-b,.vp-bar .vp-sp,.vp-bar .vp-t{width:auto;padding:0 8px;font-size:.85rem;font-weight:700;border-radius:10px}
+.vp-bar .vp-t{font-weight:500;font-variant-numeric:tabular-nums;opacity:.95}
+.vp-bar .vp-sp{background:rgba(255,255,255,.18)}
+.vp-pop{position:absolute;left:10px;right:10px;bottom:84px;display:flex;gap:8px;justify-content:center;align-items:center;background:rgba(20,24,28,.94);border-radius:16px;padding:10px}.vp-pop[hidden]{display:none}
+.vp-pop button{width:auto!important;height:38px!important;padding:0 14px!important;border-radius:12px;background:rgba(255,255,255,.16)!important;font-size:.95rem!important;font-weight:700}
+.vp-pop button.on{background:#fff!important;color:#14181C!important}
+.vp-pop input{width:110px;height:38px;border-radius:12px;border:0;padding:0 12px;font-size:1rem;text-align:center}
+.vp-pop span{color:#fff;font-size:.8rem}
 .vp-seek{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:5px;border-radius:5px;background:rgba(255,255,255,.35);outline:0;margin:0;padding:0;border:0}
 .vp-seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:0}
 .vp-seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
@@ -229,6 +237,12 @@ svg[data-mode=zone] .pas:not(.on){opacity:.3}
 .vlines line{stroke:var(--teal);stroke-width:1.4}
 .vlines circle{fill:var(--teal)}
 .flagimg{width:72px;height:auto;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;box-shadow:0 2px 6px -2px rgba(0,0,0,.25);flex:none}
+.pq{margin-top:18px;padding:16px;border-radius:18px;background:#fff;border:1.5px solid var(--line)}
+.pq label{font:700 1.05rem/1.2 "DM Sans",sans-serif;display:block;margin-bottom:8px}
+.pq input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:1rem}
+#pqOut{margin-top:12px}.pqg{padding:10px 0;border-top:1px solid var(--line)}.pqg:first-child{border-top:0}
+.pqg b{display:block;text-transform:capitalize;margin-bottom:4px}
+.pqg a{display:inline-block;margin:4px 8px 4px 0;padding:8px 14px;border-radius:30px;background:var(--bg);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600}
 .presbar{display:flex;gap:10px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none}
 .presbar::-webkit-scrollbar{display:none}
 .pres{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 16px;border-radius:18px;background:var(--ink);color:#fff;border:0;cursor:pointer;text-align:left;box-shadow:0 8px 18px -10px rgba(20,24,28,.6)}
@@ -449,8 +463,9 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "htt
 const firebaseConfig={apiKey:"AIzaSyCqI4vOaqxd7crE8I68gLcHhU4TTAvrXlc",authDomain:"libretaestudioapp.firebaseapp.com",projectId:"libretaestudioapp",storageBucket:"libretaestudioapp.firebasestorage.app",messagingSenderId:"497805272613",appId:"1:497805272613:web:a4cfbffd4af336d27e01cc"};
 const CLOUD_NAME="jjybivu7",UPLOAD_PRESET="videos_bailes";
 
-const APP_VERSION="3.4.0";
+const APP_VERSION="3.5.0";
 const CHANGELOG=[
+  {v:"3.5.0",fecha:"14 de noviembre de 2026",items:["Reproductor: botones de ±10 segundos, ir a un minuto exacto (toca el tiempo) y velocidad 0,5x / 0,75x / 1x / 1,5x.","Buscador «¿Qué bailo?» bajo las presentaciones: escribes tu nombre y ves tus bailes."]},
   {v:"3.4.0",fecha:"13 de noviembre de 2026",items:["Los videos de Drive usan el mismo reproductor limpio de la app (si falla, se abre el de Drive como respaldo)."]},
   {v:"3.3.1",fecha:"12 de noviembre de 2026",items:["Reproductor de video nuevo: botón de play grande, barra de avance y pantalla completa."]},
   {v:"3.3.0",fecha:"12 de noviembre de 2026",items:["Botones «📷 Subir foto» y «🎵 Subir audio» en cada baile.","El tutorial explica cómo conectar el Drive con el botón ☁️."]},
@@ -533,7 +548,7 @@ function linkInfo(u){u=(u||"").trim();let m;
   if(m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]+)/i))return{src:`https://drive.google.com/file/d/${m[1]}/preview`};
   return null}
 const DRIVE_API_KEY="AIzaSyCOXO4_1qaMOqpnxyuki1wzf-0Z-uKBTkM";
-const vpHtml=(src,fb)=>`<div class="vp"${fb?` data-fb="${esc(fb)}"`:""}><video src="${esc(src)}#t=0.1" playsinline preload="metadata"></video><button type="button" class="vp-big" aria-label="Reproducir">▶</button><div class="vp-bar"><button type="button" class="vp-pl" aria-label="Pausar o reproducir">▶</button><input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="Posición del video"><span class="vp-t">0:00</span><button type="button" class="vp-fs" aria-label="Pantalla completa">⛶</button></div></div>`;
+const vpHtml=(src,fb)=>`<div class="vp"${fb?` data-fb="${esc(fb)}"`:""}><video src="${esc(src)}#t=0.1" playsinline preload="metadata"></video><button type="button" class="vp-big" aria-label="Reproducir">▶</button><div class="vp-bar"><input class="vp-seek" type="range" min="0" max="1000" value="0" aria-label="Posición del video"><div class="vp-row"><button type="button" class="vp-pl" aria-label="Pausar o reproducir">▶</button><button type="button" class="vp-b" data-d="-10" aria-label="Retroceder 10 segundos">↺10</button><button type="button" class="vp-b" data-d="10" aria-label="Adelantar 10 segundos">10↻</button><button type="button" class="vp-t" aria-label="Ir a un momento del video">0:00 / 0:00</button><span class="vp-gap"></span><button type="button" class="vp-sp" aria-label="Velocidad">1x</button><button type="button" class="vp-fs" aria-label="Pantalla completa">⛶</button></div><div class="vp-pop" hidden></div></div></div>`;
 const ifr=src=>`<iframe src="${esc(src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="Video"></iframe>`;
 const vplay=u=>{const l=linkInfo(u);
   if(!l)return vpHtml(safe(u));
@@ -1017,12 +1032,23 @@ $("fLogin").onsubmit=async e=>{
 {const fmt=t=>{t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
  const V=el=>el.closest&&el.closest(".vp");
  const upd=w=>{const v=w.querySelector("video"),sk=w.querySelector(".vp-seek");if(!v)return;if(!sk.dataset.drag)sk.value=v.duration?Math.round(v.currentTime/v.duration*1000):0;w.querySelector(".vp-t").textContent=fmt(v.currentTime)+" / "+fmt(v.duration)};
+ const pop=(w,h)=>{const q=w.querySelector(".vp-pop");q.innerHTML=h;q.hidden=!h};
+ const parseT=t=>{t=String(t).trim().replace(",",".");if(!t)return NaN;const a=t.split(":").map(Number);if(a.some(isNaN)||a.length>3)return NaN;return a.reduce((x,y)=>x*60+y,0)};
+ const goTo=(w,sec)=>{const v=w.querySelector("video");if(isNaN(sec))return false;v.currentTime=Math.max(0,Math.min(sec,v.duration||sec));upd(w);return true};
  const toggle=w=>{const v=w.querySelector("video");if(v.paused){document.querySelectorAll(".vp video").forEach(o=>{if(o!==v)o.pause()});v.play().catch(()=>{})}else v.pause()};
  document.addEventListener("click",e=>{const w=V(e.target);if(!w)return;
+   const b=e.target.closest("button"),q=w.querySelector(".vp-pop");
+   if(b&&b.classList.contains("vp-b")){const v=w.querySelector("video");goTo(w,v.currentTime+(+b.dataset.d));pop(w,"");return}
+   if(b&&b.classList.contains("vp-sp")){const v=w.querySelector("video");if(!q.hidden&&q.dataset.k==="sp"){pop(w,"");return}pop(w,[.5,.75,1,1.5].map(r=>`<button type="button" class="vp-opt${v.playbackRate===r?" on":""}" data-r="${r}">${r}x</button>`).join(""));q.dataset.k="sp";return}
+   if(b&&b.classList.contains("vp-opt")){const v=w.querySelector("video");v.playbackRate=+b.dataset.r;w.querySelector(".vp-sp").textContent=b.dataset.r+"x";pop(w,"");return}
+   if(b&&b.classList.contains("vp-t")){if(!q.hidden&&q.dataset.k==="go"){pop(w,"");return}pop(w,`<span>Ir a</span><input class="vp-in" inputmode="numeric" placeholder="m:ss" aria-label="Minuto y segundo"><button type="button" class="vp-ok">Ir</button>`);q.dataset.k="go";const i=q.querySelector("input");if(i)i.focus();return}
+   if(b&&b.classList.contains("vp-ok")){const i=q.querySelector("input");if(goTo(w,parseT(i.value)))pop(w,"");else i.style.outline="2px solid #C2308A";return}
+   if(!q.hidden&&!e.target.closest(".vp-pop"))pop(w,"");
    if(e.target.closest(".vp-big,.vp-pl")||e.target.tagName==="VIDEO")toggle(w);
    else if(e.target.closest(".vp-fs")){const v=w.querySelector("video");if(document.fullscreenElement){document.exitFullscreen()}else if(w.requestFullscreen)w.requestFullscreen().catch(()=>{});else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen()}});
  document.addEventListener("input",e=>{if(!e.target.classList||!e.target.classList.contains("vp-seek"))return;const w=V(e.target),v=w.querySelector("video");e.target.dataset.drag="1";if(v.duration)v.currentTime=e.target.value/1000*v.duration;upd(w)});
  document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("vp-seek"))delete e.target.dataset.drag});
+ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList&&e.target.classList.contains("vp-in")){e.preventDefault();const w=V(e.target);if(goTo(w,parseT(e.target.value)))pop(w,"");else e.target.style.outline="2px solid #C2308A"}});
  for(const ev of["play","pause","ended","timeupdate","loadedmetadata","durationchange"])document.addEventListener(ev,e=>{if(e.target.tagName!=="VIDEO")return;const w=V(e.target);if(!w)return;
    if(ev==="play"||ev==="pause"||ev==="ended"){const pl=!e.target.paused&&!e.target.ended;w.classList.toggle("play",pl);w.querySelector(".vp-pl").textContent=pl?"❚❚":"▶"}
    upd(w)},true)}
@@ -1325,8 +1351,26 @@ function presHtml(){
   const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
   const up=presList.filter(p=>p.fecha>=hs).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,4);
   const add=user?`<div class="vtools"><button class="btn small acc" data-act="presnew">+ Presentación</button></div>`:"";
-  return `<div class="presbar">${up.map(p=>`<button type="button" class="pres" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}</b><span>${esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}`;
+  return `<div class="presbar">${up.map(p=>`<button type="button" class="pres" data-act="pres" data-id="${esc(p.id)}"><b>${esc(fmtFecha(p.fecha))}</b><span>${esc(p.titulo||"Presentación")}</span></button>`).join("")}</div>${add}<div class="pq"><label for="pqIn">¿Qué bailo?</label><input id="pqIn" type="search" placeholder="Escribe tu nombre" value="${esc(qBailo)}" autocomplete="off"><div id="pqOut">${pqRes(qBailo)}</div></div>`;
 }
+let qBailo="";
+function pqRes(q){
+  const n=norm(q);if(n.length<2)return `<p class="hint">Escribe tu nombre para ver tus bailes.</p>`;
+  const h=new Date(),hs=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
+  const ws=n.split(" ");
+  const out=[];
+  for(const p of presList.filter(p=>p.fecha>=hs).sort((a,b)=>a.fecha.localeCompare(b.fecha))){
+    const mine=[];
+    for(const b of p.bailes||[]){
+      const M=b.mujeres||[],H=b.hombres||b.bailarines||[];
+      const hit=l=>l.some(x=>{const nx=norm(x);return ws.every(w=>nx.includes(w))});
+      if(hit(M)||hit(H))mine.push(b);
+    }
+    if(mine.length)out.push(`<div class="pqg"><b>${esc(fmtFecha(p.fecha))}${p.titulo?" · "+esc(p.titulo):""}</b>${mine.map(b=>`<a href="#/b/${encodeURIComponent(b.id)}">${esc(b.nombre)} ›</a>`).join("")}</div>`);
+  }
+  return out.join("")||`<p class="hint">No aparece ese nombre en las próximas presentaciones. Revisa cómo está escrito.</p>`;
+}
+document.addEventListener("input",e=>{if(e.target.id==="pqIn"){qBailo=e.target.value;const o=$("pqOut");if(o)o.innerHTML=pqRes(qBailo)}});
 const fotSec=(t,o)=>o&&(o.texto||(o.fotos||[]).length)?`<h3 class="vsub">${t}</h3>${o.texto?`<div class="text">${esc(o.texto)}</div>`:""}${(o.fotos||[]).length?`<div class="photos" style="margin-top:12px">${o.fotos.map(x=>`<button type="button" data-zoom="${esc(safe(x.url))}" data-cap="${esc(x.titulo||t)}"><img loading="lazy" src="${esc(safe(x.url))}" alt="${esc(x.titulo||t)}">${x.titulo?`<span>${esc(x.titulo)}</span>`:""}</button>`).join("")}</div>`:""}`:"";
 function openPresView(p){
   pvId=p.id;
